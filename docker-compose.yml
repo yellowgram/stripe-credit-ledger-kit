@@ -1,0 +1,17 @@
+# Local Postgres for the credit ledger. The app does not start this for you.
+#   docker compose up -d
+# Then set DATABASE_URL (see .env.example) and run `npm run db:migrate`.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: credits
+    ports:
+      - "5432:5432"
+    volumes:
+      - credits_pg:/var/lib/postgresql/data
+
+volumes:
+  credits_pg:

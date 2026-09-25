@@ -1,0 +1,25 @@
+Commercial license — stripe-credit-ledger-kit
+
+Copyright (c) 2026 yellowgram
+
+Permission is granted to use, modify, and ship this kit inside one organization
+(single-seat / single-org) for that organization's own products and services.
+
+You may not resell, redistribute, sublicense, or republish this kit — or a
+substantial portion of it — as a competing starter kit, boilerplate, template,
+theme, or course asset. You may not offer a hosted service whose purpose is to
+give third parties this kit.
+
+Exception — MIT extract. The files listed below are also licensed under the MIT
+License (see src/billing/LICENSE.MIT). You may copy that slice into an application
+without the no-resale terms following it. The rest of this repository stays under
+the terms above.
+
+  - src/billing/errors.ts
+  - src/billing/types.ts
+  - src/billing/ledger.ts
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. YOU ARE
+RESPONSIBLE FOR BILLING CORRECTNESS IN PRODUCTION. THIS KIT DOES NOT PROVIDE
+LEGAL, TAX, OR ACCOUNTING ADVICE AND IS NOT AFFILIATED WITH STRIPE, AUTUMN,
+OR METRONOME.
