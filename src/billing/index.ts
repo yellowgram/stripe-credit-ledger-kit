@@ -42,5 +42,5 @@ export {
   unpauseUser,
 } from "./ledger";
 export { createCreditPackCheckout } from "./checkout";
-export { expectedLivemode, handleStripeEvent, verifyStripeEvent } from "./webhook";
+export { expectedLivemode, handleStripeEvent, unresolvedChargeId, verifyStripeEvent, withPaymentIntent } from "./webhook";
 export type { StripeEventInput, WebhookResult } from "./webhook";

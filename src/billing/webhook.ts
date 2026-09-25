@@ -53,7 +53,8 @@ export type WebhookResult = {
     | "session_already_granted"
     | "clawed_back"
     | "already_clawed_back"
-    | "ignored_unknown_payment_intent";
+    | "ignored_unknown_payment_intent"
+    | "invalid_metadata";
   clawedBack?: number;
   shortfall?: number;
   paused?: boolean;
@@ -142,6 +143,26 @@ function readGrant(session: NonNullable<StripeEventInput["data"]["object"]>): {
 }
 
 /**
+ * Charge id to look up when a refund or dispute has no payment intent on the payload.
+ * Webhook API versions often send dispute.charge as an id and omit payment_intent.
+ */
+export function unresolvedChargeId(event: StripeEventInput): string | null {
+  if (!event?.type || !CLAWBACK_EVENT_TYPES.has(event.type) || !event.data?.object) return null;
+  const ids = clawbackIds(event.data.object);
+  if (ids.paymentIntentId) return null;
+  return ids.chargeId;
+}
+
+export function withPaymentIntent(event: StripeEventInput, paymentIntentId: string): StripeEventInput {
+  const object = event.data.object;
+  if (!object) return event;
+  return {
+    ...event,
+    data: { ...event.data, object: { ...object, payment_intent: paymentIntentId } },
+  };
+}
+
+/**
  * Verify the signature before calling this.
  * Signature problems and livemode_mismatch are the caller's 400.
  * livemode is checked before any insert so a wrong key does not burn the event id.
@@ -187,7 +208,16 @@ export async function handleStripeEvent(
       return { duplicate: false, granted: false, reason: "unpaid" };
     }
 
-    const grant = readGrant(session);
+    let grant: ReturnType<typeof readGrant>;
+    try {
+      grant = readGrant(session);
+    } catch (error) {
+      if (error instanceof LedgerError && error.code === "invalid_metadata") {
+        return { duplicate: false, granted: false, reason: "invalid_metadata" };
+      }
+      throw error;
+    }
+    if (!grant.paymentIntentId) throw new LedgerError("missing_payment_intent");
     const already = await tx.get<{ id: string }>(
       `SELECT id FROM credit_ledger_entries WHERE checkout_session_id = ?`,
       [grant.sessionId],

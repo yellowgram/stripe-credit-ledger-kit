@@ -202,6 +202,10 @@ A new grant does **not** clear the pause. Call `unpauseUser` from your admin pat
 
 A refund for a payment intent that has no grant row is stored and ignored (`ignored_unknown_payment_intent`, HTTP 200). Stripe does not retry it. If that grant arrives later, this event will not claw it back. A second refund or dispute for the same payment intent is `already_clawed_back`.
 
+If a dispute payload has only `charge` and no payment intent, the webhook loads the Charge and uses its payment intent. `charge.dispute.closed` does not give credits back when you win. There is no dispute state machine.
+
+A Checkout event with no `userId` or `packId` is stored and ignored (`invalid_metadata`, HTTP 200). A paid session with no payment intent is HTTP 500 and is not granted, so a later refund can still find the grant.
+
 Partial refunds are a full pack reversal. Proration is not implemented.
 
 ## Balance invariant

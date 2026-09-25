@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { LedgerError, handleStripeEvent, verifyStripeEvent } from "@/billing";
+import { LedgerError, handleStripeEvent, unresolvedChargeId, verifyStripeEvent, withPaymentIntent } from "@/billing";
 import { getDb, ready } from "@/server/ledger";
 
 export const runtime = "nodejs";
@@ -13,9 +13,9 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   const rawBody = await req.text();
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_signature_only");
   let event: Stripe.Event;
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_signature_only");
     event = verifyStripeEvent(stripe, rawBody, signature, secret);
   } catch (error) {
     if (error instanceof LedgerError) {
@@ -24,9 +24,26 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ error: "invalid_signature" }, { status: 400 });
   }
 
+  let parsed = event;
+  const chargeId = unresolvedChargeId(event);
+  if (chargeId) {
+    try {
+      const charge = await stripe.charges.retrieve(chargeId);
+      const paymentIntentId =
+        typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id ?? null;
+      if (paymentIntentId) parsed = withPaymentIntent(event, paymentIntentId) as Stripe.Event;
+    } catch (error) {
+      const statusCode = error && typeof error === "object" && "statusCode" in error ? Number(error.statusCode) : 0;
+      if (statusCode !== 404) {
+        console.error(error);
+        return Response.json({ error: "charge_lookup_failed" }, { status: 500 });
+      }
+    }
+  }
+
   try {
     await ready();
-    const result = await handleStripeEvent(getDb(), event);
+    const result = await handleStripeEvent(getDb(), parsed);
     return Response.json({ received: true, ...result });
   } catch (error) {
     // livemode_mismatch is permanent for this key. 400 so Stripe stops.
