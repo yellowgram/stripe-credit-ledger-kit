@@ -115,8 +115,10 @@ See `.env.example`.
 | `DATABASE_URL` | Production | `postgres://` or `postgresql://`. Wins over SQLite when set. |
 | `SQLITE_PATH` | Dev alternate | File path. Ignored when `DATABASE_URL` is Postgres. |
 | `DEMO_USER_ID` | Demo | Balance owner for the shell. Default `demo_user`. |
-| `ALLOW_DEMO_CONTROLS` | Demo | Default **false**. `true` seeds 100 credits and enables spend, race, and reset. The shell is not production. |
+| `ALLOW_DEMO_CONTROLS` | Demo | Default **false**. `true` seeds 100 credits and enables spend, race, reset, checkout, check, and track. The shell is not production. |
+| `LEDGER_API_SECRET` | Optional | When the demo flag is off, `POST /api/checkout`, `/api/credits/check`, and `/api/credits/track` accept header `x-ledger-secret` equal to this value. Leave unset unless you are calling the shell from your own server. |
 | `CREDIT_HOLD_TTL_SECONDS` | Optional | How long a hold stays `held` before the reaper returns the credits. Default `900` (15 minutes). |
+| `CREDIT_HOLD_REAP_INTERVAL_SECONDS` | Optional | Sleep between passes of `npm run holds:reap`. Default `60`. |
 | `STRIPE_EXPECT_LIVEMODE` | Optional | `true` or `false` overrides the key prefix. Unset: `sk_live_` expects live events; every other key expects test events. |
 
 The app creates tables on boot (`ensureSchema`). It seeds the demo user (`seed:<userId>`) only when `ALLOW_DEMO_CONTROLS=true`. `npm run db:migrate` follows the same rule.
@@ -182,17 +184,25 @@ A successful call finalizes. Releasing a finalized reservation returns `already_
 
 A crash after `reserve` and before `finalize` or `release` would otherwise leave credits held forever. Holds older than `CREDIT_HOLD_TTL_SECONDS` (default **900**, fifteen minutes) are expired: status becomes `expired`, an `expire` journal row is appended, and the reserved credits return to the balance.
 
-`reserve` calls `reapExpiredHolds` first, and the demo process calls it on boot. In your app, also call it on an interval. One call expires at most 200 holds; call again if you expect more. An expired key stays consumed (`hold_expired`). Start a new key for a new call.
+`reserve` calls `reapExpiredHolds` first, and the demo process calls it on boot. In production run a loop about every 60 seconds:
+
+```bash
+npm run holds:reap
+```
+
+That is `scripts/reap-holds.ts`. `CREDIT_HOLD_REAP_INTERVAL_SECONDS` defaults to 60. `npm run holds:reap -- --once` expires one batch and exits. One call expires at most 200 holds; the loop calls it again. An expired key stays consumed (`hold_expired`). Start a new key for a new call.
 
 ## Refunds and disputes
 
-`charge.refunded` and `charge.dispute.created` claw back the **full pack**, not a prorated cent amount. The handler looks up the grant by `payment_intent` id, removes `min(balance, grant credits)`, and writes one `clawback` row per payment intent.
+`charge.refunded` and `charge.dispute.created` claw back the **full pack**, not a prorated cent amount. The payment intent is read from `payment_intent`, then from `charge.payment_intent`, then by a stored charge id or Checkout session id. One `clawback` row is written per payment intent.
 
-If the user already spent part of the grant, the remainder is removed, the shortfall is journaled (`kind = shortfall`, delta 0), and `credit_balances.paused` is set. `reserve` and `track` then return `account_paused`. A later successful grant clears the pause. There is no dispute state machine and no manual unpause route.
+Open holds for that user are released in the **same** transaction, then the spendable balance is debited. A later reaper pass cannot put those credits back. If a hold was closed, or the balance cannot cover the grant, the user is paused. A shortfall is journaled (`kind = shortfall`, delta 0) only when credits are actually missing. `reserve` and `track` then return `account_paused`.
 
-A refund that arrives before the grant throws, rolls back the event row, and returns HTTP 500 so Stripe retries. A second refund or dispute for the same payment intent is `already_clawed_back`.
+A new grant does **not** clear the pause. Call `unpauseUser` from your admin path. The demo reset button does that. There is no dispute state machine.
 
-Partial refunds are treated as a full pack reversal. Proration is not implemented.
+A refund for a payment intent that has no grant row is stored and ignored (`ignored_unknown_payment_intent`, HTTP 200). Stripe does not retry it. If that grant arrives later, this event will not claw it back. A second refund or dispute for the same payment intent is `already_clawed_back`.
+
+Partial refunds are a full pack reversal. Proration is not implemented.
 
 ## Balance invariant
 
@@ -227,7 +237,8 @@ npm test
 | `tests/concurrent-race.test.ts` | Two processes, two SQLite connections, one balance of 10. One reserve wins. The demo race helper agrees. |
 | `tests/failed-after-reserve.test.ts` | Provider failure releases. Second release does not refund. Finalize then release does not refund. `track` is at-most-once. |
 | `tests/review-fixes.test.ts` | Fail-closed replay, per-user keys, reaper, refund/dispute clawback, livemode, currency, balance invariant. |
-| `tests/webhook-status.test.ts` | Signature and placeholder secret are HTTP 400. Livemode and amount failures are HTTP 500. Track requires a client key. Demo controls default off. Checkout origin is `NEXT_PUBLIC_APP_URL`. |
+| `tests/webhook-status.test.ts` | Signature and placeholder secret are HTTP 400. Livemode mismatch is HTTP 400. Amount mismatch is HTTP 500. Track requires a client key. Demo controls default off. Checkout origin is `NEXT_PUBLIC_APP_URL`. |
+| `tests/shell-gates.test.ts` | Checkout, check, and track are 404 when the demo flag is off. A matching `x-ledger-secret` or the demo flag opens them. |
 | `tests/postgres-concurrency.test.ts` | Skipped unless `DATABASE_URL` is Postgres. Two-process last-credit race and webhook replay on Postgres. |
 
 The race test spawns two processes so the decrement is not just serialized on one connection’s mutex. `npm test` needs no Postgres and no Stripe network. The GitHub Actions `postgres` job sets `DATABASE_URL` and runs the same suite, including the Postgres race. The gate stays `UPDATE … AND balance >= ?`. It does not require `SERIALIZABLE`.
@@ -245,7 +256,7 @@ Delete the demo shell when it is no longer useful:
 
 The MIT extract is `src/billing/errors.ts`, `src/billing/types.ts`, and `src/billing/ledger.ts`, plus `src/billing/LICENSE.MIT`. You can drop that slice into another service and implement `Db` yourself. The adapters in `src/billing/db.ts`, Checkout, webhook, and catalog stay under the no-resale license in `LICENSE`.
 
-Routes in this repo attribute every call to `DEMO_USER_ID`. In your app, ignore any `userId` in the JSON body.
+Routes in this repo attribute every call to `DEMO_USER_ID`, and only when `ALLOW_DEMO_CONTROLS=true` (or `x-ledger-secret` matches `LEDGER_API_SECRET` for checkout, check, and track). When you copy `src/billing`, the Checkout `userId` must come from your session. Never pass `DEMO_USER_ID` or any other env default as the customer. Ignore any `userId` in the JSON body.
 
 ## Failure modes
 
@@ -253,11 +264,14 @@ Routes in this repo attribute every call to `DEMO_USER_ID`. In your app, ignore 
 |---|---|
 | Bad or missing `Stripe-Signature` | HTTP 400. No database write. |
 | Webhook secret missing or still `replace_me` | HTTP 400. |
-| Database down, livemode mismatch, amount or currency mismatch, refund before the grant | HTTP 500. A mismatch rolls the `stripe_events` insert back. Stripe retries. |
+| Livemode does not match the Stripe key | HTTP 400. The event id is not stored. Stripe stops. |
+| Database down, amount or currency mismatch | HTTP 500. The `stripe_events` insert rolls back. Stripe retries. |
+| Refund or dispute for an unknown payment intent | HTTP 200, event stored, `ignored_unknown_payment_intent`. Stripe stops. A grant that arrives later is not clawed back by this event. |
 | Retry storm of the same `event.id` | Unique `stripe_events.id`. One grant. |
 | `checkout.session.completed` and `async_payment_succeeded` for one session | Unique `checkout_session_id` on the grant row. One grant. |
 | Unpaid `checkout.session.completed` | Event stored. No grant. The async success event can still grant. |
-| `charge.refunded` or `charge.dispute.created` | Full-pack clawback. Shortfall pauses the user. |
+| `charge.refunded` or `charge.dispute.created` | Full-pack clawback, including a partial refund. Open holds are released in that transaction, then the balance is debited. A shortfall or a closed hold pauses the user. |
+| Checkout, check, or track while the demo flag is off | HTTP 404, unless `x-ledger-secret` matches `LEDGER_API_SECRET`. |
 | Balance too low | `reserve` / `track` return `insufficient_credits`. Demo spend routes use HTTP 402. |
 | Provider error after reserve | `release` returns the credits. |
 | Same key after release, finalize, or expiry | Error. Not `ok: true`. |
@@ -280,7 +294,7 @@ src/app/         demo UI and HTTP routes
 src/demo/        fake LLM and demo reset — not a product
 src/server/      process-wide DB handle and demo user id
 tests/           edge cases
-scripts/         migrate, signed webhook fixture
+scripts/         migrate, signed webhook fixture, hold reaper loop
 docs/            free chapter (invoice-time grants vs this ledger)
 ```
 

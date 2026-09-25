@@ -84,7 +84,7 @@ describe("webhook HTTP status and demo defaults", () => {
     expect(bad.status).toBe(400);
   });
 
-  it("returns 500 for a livemode mismatch and an amount mismatch so Stripe retries", async () => {
+  it("returns 400 for livemode mismatch and 500 for an amount mismatch", async () => {
     const live = await POST(
       signed({
         id: "evt_http_live",
@@ -94,7 +94,7 @@ describe("webhook HTTP status and demo defaults", () => {
         data: { object: { id: "cs_http_live", payment_status: "paid" } },
       }),
     );
-    expect(live.status).toBe(500);
+    expect(live.status).toBe(400);
     expect(await live.json()).toMatchObject({ error: "livemode_mismatch" });
 
     const amount = await POST(
@@ -122,7 +122,6 @@ describe("webhook HTTP status and demo defaults", () => {
     expect(demoControlsEnabled()).toBe(false);
     process.env.ALLOW_DEMO_CONTROLS = "true";
     expect(demoControlsEnabled()).toBe(true);
-    delete process.env.ALLOW_DEMO_CONTROLS;
 
     expect(appOrigin()).toBe("https://app.example");
 
@@ -135,5 +134,6 @@ describe("webhook HTTP status and demo defaults", () => {
     );
     expect(missingKey.status).toBe(400);
     expect(await missingKey.json()).toMatchObject({ error: "invalid_idempotency_key" });
+    delete process.env.ALLOW_DEMO_CONTROLS;
   });
 });

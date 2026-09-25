@@ -15,6 +15,17 @@ export function demoControlsEnabled(): boolean {
   return process.env.ALLOW_DEMO_CONTROLS === "true";
 }
 
+/**
+ * Demo shell gate for checkout, check, and track.
+ * Open when ALLOW_DEMO_CONTROLS=true, or when x-ledger-secret matches LEDGER_API_SECRET.
+ */
+export function shellApiAllowed(req: Request): boolean {
+  if (demoControlsEnabled()) return true;
+  const configured = process.env.LEDGER_API_SECRET?.trim();
+  if (!configured) return false;
+  return req.headers.get("x-ledger-secret")?.trim() === configured;
+}
+
 export function getDb(): Db {
   if (!globalStore.__creditLedgerDb) {
     globalStore.__creditLedgerDb = createDbFromEnv();

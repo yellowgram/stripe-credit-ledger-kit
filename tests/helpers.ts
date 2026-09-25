@@ -66,6 +66,7 @@ export function checkoutEvent(input: {
   amountTotal?: number;
   currency?: string;
   paymentIntentId?: string | null;
+  chargeId?: string;
   livemode?: boolean;
 }): StripeEventInput {
   const packId = input.packId ?? "pack_100";
@@ -84,6 +85,7 @@ export function checkoutEvent(input: {
         amount_total: input.amountTotal ?? pack?.amountCents ?? 500,
         currency: input.currency ?? pack?.currency ?? "usd",
         payment_intent: paymentIntent,
+        latest_charge: input.chargeId,
         metadata: {
           userId: input.userId ?? "user_1",
           credits: String(input.credits ?? pack?.credits ?? 100),

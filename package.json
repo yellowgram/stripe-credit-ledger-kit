@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:migrate": "tsx scripts/migrate.ts",
-    "demo:webhook": "tsx scripts/post-signed-event.ts"
+    "demo:webhook": "tsx scripts/post-signed-event.ts",
+    "holds:reap": "tsx scripts/reap-holds.ts"
   },
   "engines": {
     "node": ">=20"

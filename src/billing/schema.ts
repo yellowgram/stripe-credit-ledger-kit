@@ -31,6 +31,7 @@ const CREATE_STATEMENTS: readonly string[] = [
     stripe_event_id TEXT,
     checkout_session_id TEXT,
     payment_intent_id TEXT,
+    charge_id TEXT,
     pack_id TEXT,
     note TEXT,
     livemode INTEGER,
@@ -54,6 +55,7 @@ const CREATE_STATEMENTS: readonly string[] = [
 const ADD_COLUMNS: readonly string[] = [
   `ALTER TABLE credit_balances ADD COLUMN paused INTEGER NOT NULL DEFAULT 0`,
   `ALTER TABLE credit_ledger_entries ADD COLUMN payment_intent_id TEXT`,
+  `ALTER TABLE credit_ledger_entries ADD COLUMN charge_id TEXT`,
   `ALTER TABLE credit_ledger_entries ADD COLUMN livemode INTEGER`,
   `ALTER TABLE stripe_events ADD COLUMN livemode INTEGER`,
 ];
@@ -81,9 +83,11 @@ export async function ensureSchema(db: Db): Promise<void> {
        AND idempotency_key IS NOT NULL`,
   );
   await db.run(`DROP INDEX IF EXISTS credit_ledger_idempotency`);
+  await db.run(`DROP INDEX IF EXISTS credit_ledger_user_idempotency`);
   await db.run(
-    `CREATE UNIQUE INDEX IF NOT EXISTS credit_ledger_user_idempotency
-     ON credit_ledger_entries (user_id, idempotency_key)`,
+    `CREATE UNIQUE INDEX credit_ledger_user_idempotency
+     ON credit_ledger_entries (user_id, idempotency_key)
+     WHERE idempotency_key IS NOT NULL`,
   );
   await db.run(
     `CREATE INDEX IF NOT EXISTS credit_ledger_open_holds

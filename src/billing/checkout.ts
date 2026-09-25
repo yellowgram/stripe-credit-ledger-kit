@@ -6,6 +6,7 @@ import { creditPackMetadata, getPack } from "./packs";
  * One-time Stripe Checkout Session for a catalog pack.
  * metadata (and the PaymentIntent copy) always carries userId, credits, packId.
  * client_reference_id repeats userId for the Dashboard.
+ * Pass userId from the buyer's session. Do not use an env default in production.
  */
 export async function createCreditPackCheckout(
   stripe: Stripe,

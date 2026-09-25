@@ -1,13 +1,16 @@
 import Stripe from "stripe";
 import { LedgerError, createCreditPackCheckout } from "@/billing";
 import { errorResponse, readJson } from "@/server/http";
-import { appOrigin, demoUserId, ready } from "@/server/ledger";
+import { appOrigin, demoUserId, ready, shellApiAllowed } from "@/server/ledger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request): Promise<Response> {
   try {
+    if (!shellApiAllowed(req)) {
+      return Response.json({ error: "demo_controls_disabled" }, { status: 404 });
+    }
     await ready();
     const body = await readJson(req);
     const packId = body.packId;

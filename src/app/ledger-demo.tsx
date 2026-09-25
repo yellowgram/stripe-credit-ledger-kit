@@ -94,7 +94,7 @@ export function LedgerDemo() {
           Demo user <code>{snapshot?.userId ?? "…"}</code>. No login. This shell is not a production app.
         </p>
         {snapshot?.paused ? (
-          <p className="banner">This user is paused after a refund or dispute shortfall. A later grant clears the pause.</p>
+          <p className="banner">This user is paused after a refund or dispute. A new grant does not clear it. Demo reset does.</p>
         ) : null}
         {checkout === "success" ? (
           <p className="banner">Stripe sent the browser back. The balance moves when the webhook lands, not when this page loads.</p>
@@ -125,7 +125,7 @@ export function LedgerDemo() {
           </div>
         ) : (
           <p className="note" style={{ marginTop: 16 }}>
-            Spend, race, and reset are off. Set <code>ALLOW_DEMO_CONTROLS=true</code> for a local walkthrough. Buy still opens Checkout.
+            Spend, race, reset, and Checkout are off. Set <code>ALLOW_DEMO_CONTROLS=true</code> for a local walkthrough.
           </p>
         )}
         {snapshot ? (
@@ -150,9 +150,11 @@ export function LedgerDemo() {
                   {pack.credits.toLocaleString("en-US")} credits · {money(pack.amountCents, pack.currency)}
                 </p>
               </div>
-              <button className="ghost" disabled={pending !== null} onClick={() => run(pack.id, "/api/checkout", { packId: pack.id })}>
-                {pending === pack.id ? "Opening…" : "Buy"}
-              </button>
+              {snapshot?.demoControls ? (
+                <button className="ghost" disabled={pending !== null} onClick={() => run(pack.id, "/api/checkout", { packId: pack.id })}>
+                  {pending === pack.id ? "Opening…" : "Buy"}
+                </button>
+              ) : null}
             </div>
           ))}
           {snapshot && snapshot.packs.length === 0 ? <p className="note">No packs configured.</p> : null}

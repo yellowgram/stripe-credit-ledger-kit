@@ -1,5 +1,15 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { check, finalize, getBalance, grantCredits, listEntries, release, reserve, track } from "../src/billing/ledger";
+import {
+  balanceBreakdown,
+  check,
+  finalize,
+  getBalance,
+  grantCredits,
+  listEntries,
+  release,
+  reserve,
+  track,
+} from "../src/billing/ledger";
 import { runDemoGeneration } from "../src/demo/llm";
 import { tempDb } from "./helpers";
 
@@ -66,6 +76,8 @@ describe("failed call after reserve", () => {
 
     expect(await check(ctx.db, "user_1", 60)).toEqual({ ok: true, balance: 60 });
     expect(await check(ctx.db, "user_1", 61)).toEqual({ ok: false, balance: 60 });
+    const breakdown = await balanceBreakdown(ctx.db, "user_1");
+    expect(breakdown.balance).toBe(breakdown.expected);
   });
 
   it("does not burn an idempotency key that failed for insufficient credits", async () => {
@@ -88,6 +100,8 @@ describe("failed call after reserve", () => {
     expect(await getBalance(ctx.db, "user_1")).toBe(5);
     await release(ctx.db, "user_1", "retry_me");
     expect(await getBalance(ctx.db, "user_1")).toBe(15);
+    const breakdown = await balanceBreakdown(ctx.db, "user_1");
+    expect(breakdown.balance).toBe(breakdown.expected);
   });
 
   it("tracks the same key at most once", async () => {
@@ -104,5 +118,7 @@ describe("failed call after reserve", () => {
     expect(first).toMatchObject({ ok: true, replay: false, balance: 20 });
     expect(second).toMatchObject({ ok: true, replay: true, balance: 20 });
     expect(await getBalance(ctx.db, "user_1")).toBe(20);
+    const breakdown = await balanceBreakdown(ctx.db, "user_1");
+    expect(breakdown.balance).toBe(breakdown.expected);
   });
 });

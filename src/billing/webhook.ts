@@ -12,8 +12,9 @@ import type { Db, Executor } from "./types";
  * Credits come from the pack catalog. metadata.credits is not authority.
  * session.amount_total must equal the pack price and currency must match.
  *
- * charge.refunded and charge.dispute.created claw back the full grant
- * (min of balance and grant size). A shortfall pauses the user.
+ * charge.refunded and charge.dispute.created claw back the full grant.
+ * Open holds are released in that same transaction, then the balance is debited.
+ * A missing grant is stored and ignored (HTTP 200), not retried forever.
  */
 const SESSION_EVENT_TYPES = new Set([
   "checkout.session.completed",
@@ -34,6 +35,9 @@ export type StripeEventInput = {
       amount_total?: number | null;
       currency?: string | null;
       payment_intent?: string | { id?: string } | null;
+      charge?: string | { id?: string; payment_intent?: string | { id?: string } | null } | null;
+      latest_charge?: string | { id?: string } | null;
+      checkout_session?: string | null;
       metadata?: Record<string, string> | null;
     } | null;
   };
@@ -48,7 +52,8 @@ export type WebhookResult = {
     | "unpaid"
     | "session_already_granted"
     | "clawed_back"
-    | "already_clawed_back";
+    | "already_clawed_back"
+    | "ignored_unknown_payment_intent";
   clawedBack?: number;
   shortfall?: number;
   paused?: boolean;
@@ -93,12 +98,23 @@ function paymentIntentIdOf(value: string | { id?: string } | null | undefined): 
   return null;
 }
 
+function chargeIdOf(
+  value: string | { id?: string; payment_intent?: string | { id?: string } | null } | null | undefined,
+): string | null {
+  if (typeof value === "string" && value.trim() !== "") return value;
+  if (value && typeof value === "object" && typeof value.id === "string" && value.id.trim() !== "") {
+    return value.id;
+  }
+  return null;
+}
+
 function readGrant(session: NonNullable<StripeEventInput["data"]["object"]>): {
   sessionId: string;
   userId: string;
   packId: string;
   credits: number;
   paymentIntentId: string | null;
+  chargeId: string | null;
 } {
   const sessionId = session.id;
   const metadata = session.metadata ?? {};
@@ -121,14 +137,15 @@ function readGrant(session: NonNullable<StripeEventInput["data"]["object"]>): {
     packId,
     credits: pack.credits,
     paymentIntentId: paymentIntentIdOf(session.payment_intent),
+    chargeId: chargeIdOf(session.latest_charge) ?? chargeIdOf(session.charge),
   };
 }
 
 /**
  * Verify the signature before calling this.
- * Signature problems are the caller's 400. Throws here are retryable (HTTP 500):
- * the stripe_events insert rolls back with the transaction.
+ * Signature problems and livemode_mismatch are the caller's 400.
  * livemode is checked before any insert so a wrong key does not burn the event id.
+ * Other throws are retryable (HTTP 500): the stripe_events insert rolls back.
  */
 export async function handleStripeEvent(
   db: Db,
@@ -187,6 +204,7 @@ export async function handleStripeEvent(
       stripeEventId: event.id,
       checkoutSessionId: grant.sessionId,
       paymentIntentId: grant.paymentIntentId,
+      chargeId: grant.chargeId,
       livemode: live,
       note: "Stripe Checkout credit pack",
     });
@@ -197,15 +215,72 @@ export async function handleStripeEvent(
   });
 }
 
+type GrantHit = { user_id: string; delta: unknown; payment_intent_id: string | null };
+
+async function findGrant(
+  tx: Executor,
+  ids: { paymentIntentId: string | null; chargeId: string | null; sessionId: string | null },
+): Promise<GrantHit | undefined> {
+  if (ids.paymentIntentId) {
+    const byPayment = await tx.get<GrantHit>(
+      `SELECT user_id, delta, payment_intent_id FROM credit_ledger_entries
+       WHERE kind = 'grant' AND payment_intent_id = ?`,
+      [ids.paymentIntentId],
+    );
+    if (byPayment) return byPayment;
+  }
+  if (ids.chargeId) {
+    const byCharge = await tx.get<GrantHit>(
+      `SELECT user_id, delta, payment_intent_id FROM credit_ledger_entries
+       WHERE kind = 'grant' AND charge_id = ?`,
+      [ids.chargeId],
+    );
+    if (byCharge) return byCharge;
+  }
+  if (ids.sessionId) {
+    const bySession = await tx.get<GrantHit>(
+      `SELECT user_id, delta, payment_intent_id FROM credit_ledger_entries
+       WHERE kind = 'grant' AND checkout_session_id = ?`,
+      [ids.sessionId],
+    );
+    if (bySession) return bySession;
+  }
+  return undefined;
+}
+
+function clawbackIds(object: NonNullable<StripeEventInput["data"]["object"]>): {
+  paymentIntentId: string | null;
+  chargeId: string | null;
+  sessionId: string | null;
+} {
+  const nestedCharge = object.charge && typeof object.charge === "object" ? object.charge : null;
+  const paymentIntentId =
+    paymentIntentIdOf(object.payment_intent) ?? paymentIntentIdOf(nestedCharge?.payment_intent);
+  const chargeId =
+    chargeIdOf(object.charge) ?? (object.object === "charge" ? (object.id ?? null) : null);
+  const sessionId =
+    typeof object.checkout_session === "string" && object.checkout_session.trim() !== ""
+      ? object.checkout_session
+      : object.object === "checkout.session"
+        ? (object.id ?? null)
+        : null;
+  return { paymentIntentId, chargeId, sessionId };
+}
+
 async function clawbackEvent(tx: Executor, event: StripeEventInput): Promise<WebhookResult> {
-  const paymentIntentId = paymentIntentIdOf(event.data.object?.payment_intent);
-  if (!paymentIntentId) throw new LedgerError("grant_not_found");
-  const grant = await tx.get<{ user_id: string; delta: unknown }>(
-    `SELECT user_id, delta FROM credit_ledger_entries
-     WHERE payment_intent_id = ? AND kind = 'grant'`,
-    [paymentIntentId],
-  );
-  if (!grant) throw new LedgerError("grant_not_found");
+  const object = event.data.object;
+  if (!object) {
+    return { duplicate: false, granted: false, reason: "ignored_unknown_payment_intent" };
+  }
+  const ids = clawbackIds(object);
+  const grant = await findGrant(tx, ids);
+  if (!grant) {
+    return { duplicate: false, granted: false, reason: "ignored_unknown_payment_intent" };
+  }
+  const paymentIntentId = grant.payment_intent_id ?? ids.paymentIntentId ?? (ids.chargeId ? `charge:${ids.chargeId}` : null);
+  if (!paymentIntentId) {
+    return { duplicate: false, granted: false, reason: "ignored_unknown_payment_intent" };
+  }
   const credits = Number(grant.delta);
   if (!Number.isSafeInteger(credits) || credits <= 0) throw new LedgerError("invalid_grant");
   const applied = await applyClawback(tx, {

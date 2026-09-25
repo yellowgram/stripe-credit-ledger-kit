@@ -61,6 +61,7 @@ export type GrantInput = {
   stripeEventId?: string | null;
   checkoutSessionId?: string | null;
   paymentIntentId?: string | null;
+  chargeId?: string | null;
   livemode?: boolean | null;
   note?: string | null;
 };

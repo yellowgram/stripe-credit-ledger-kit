@@ -29,8 +29,11 @@ export async function POST(req: Request): Promise<Response> {
     const result = await handleStripeEvent(getDb(), event);
     return Response.json({ received: true, ...result });
   } catch (error) {
-    // Retryable: database blips, livemode mismatch, amount mismatch, unexpected throws.
-    // Signature failures returned 400 above. Do not map every LedgerError to 400.
+    // livemode_mismatch is permanent for this key. 400 so Stripe stops.
+    // Other processing failures stay 500 so Stripe retries.
+    if (error instanceof LedgerError && error.code === "livemode_mismatch") {
+      return Response.json({ error: error.code }, { status: 400 });
+    }
     console.error(error);
     const code = error instanceof LedgerError ? error.code : "internal_error";
     return Response.json({ error: code }, { status: 500 });

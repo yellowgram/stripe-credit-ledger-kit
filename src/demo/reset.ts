@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { LedgerError } from "../billing/errors";
-import { getBalance, grantCredits, listHeldReservations, release, track } from "../billing/ledger";
+import { getBalance, grantCredits, listHeldReservations, release, track, unpauseUser } from "../billing/ledger";
 import type { Db } from "../billing/types";
 import { runDemoGeneration, type DemoCallResult } from "./llm";
 
@@ -9,6 +9,7 @@ export async function resetDemoUser(db: Db, userId: string, target = 100): Promi
   if (!Number.isSafeInteger(target) || target < 0) {
     throw new LedgerError("invalid_target");
   }
+  await unpauseUser(db, userId);
   const held = await listHeldReservations(db, userId);
   for (const reservation of held) {
     await release(db, userId, reservation.idempotencyKey);

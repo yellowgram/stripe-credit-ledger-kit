@@ -6,10 +6,12 @@ import {
   getBalance,
   grantCredits,
   listEntries,
+  listHeldReservations,
   reapExpiredHolds,
   release,
   reserve,
   track,
+  unpauseUser,
 } from "../src/billing/ledger";
 import { expectedLivemode, handleStripeEvent } from "../src/billing/webhook";
 import { checkoutEvent, tempDb } from "./helpers";
@@ -181,26 +183,126 @@ describe("accepted review fixes", () => {
       packId: "pack_100",
       idempotencyKey: "grant_after_pause",
     });
+    expect(await getAccount(ctx.db, "user_1")).toEqual({ balance: 10, paused: true });
+    await unpauseUser(ctx.db, "user_1");
     expect(await getAccount(ctx.db, "user_1")).toEqual({ balance: 10, paused: false });
   });
 
-  it("does not burn the event id when the refund arrives before the grant", async () => {
+  it("stores an unknown refund and does not retry it forever", async () => {
     const ctx = await tempDb();
     cleanups.push(ctx.cleanup);
-    await expect(
-      handleStripeEvent(
-        ctx.db,
-        {
-          id: "evt_early_refund",
-          type: "charge.refunded",
-          livemode: false,
-          data: { object: { payment_intent: "pi_not_yet" } },
-        },
-        testEnv,
-      ),
-    ).rejects.toThrow(/grant_not_found/);
+    const first = await handleStripeEvent(
+      ctx.db,
+      {
+        id: "evt_early_refund",
+        type: "charge.refunded",
+        livemode: false,
+        data: { object: { payment_intent: "pi_not_yet" } },
+      },
+      testEnv,
+    );
+    expect(first).toMatchObject({ granted: false, reason: "ignored_unknown_payment_intent" });
     const count = await ctx.db.get<{ n: number }>(`SELECT COUNT(*) AS n FROM stripe_events`);
-    expect(Number(count?.n)).toBe(0);
+    expect(Number(count?.n)).toBe(1);
+    const second = await handleStripeEvent(
+      ctx.db,
+      {
+        id: "evt_early_refund",
+        type: "charge.refunded",
+        livemode: false,
+        data: { object: { payment_intent: "pi_not_yet" } },
+      },
+      testEnv,
+    );
+    expect(second).toMatchObject({ duplicate: true, reason: "duplicate_event" });
+  });
+
+  it("releases a held reserve during refund so the reaper cannot restore it", async () => {
+    const ctx = await tempDb();
+    cleanups.push(ctx.cleanup);
+    await handleStripeEvent(
+      ctx.db,
+      checkoutEvent({ id: "evt_hold_grant", sessionId: "cs_hold_refund", packId: "pack_100" }),
+      testEnv,
+    );
+    const reserved = await reserve(ctx.db, { userId: "user_1", amount: 80, idempotencyKey: "hold_80" });
+    expect(reserved.ok).toBe(true);
+    expect(await getBalance(ctx.db, "user_1")).toBe(20);
+
+    const refund = await handleStripeEvent(
+      ctx.db,
+      {
+        id: "evt_hold_refund",
+        type: "charge.refunded",
+        livemode: false,
+        data: { object: { id: "ch_hold", object: "charge", payment_intent: "pi_cs_hold_refund" } },
+      },
+      testEnv,
+    );
+    expect(refund).toMatchObject({ reason: "clawed_back", paused: true });
+    expect(await getBalance(ctx.db, "user_1")).toBe(0);
+    expect(await listHeldReservations(ctx.db, "user_1")).toEqual([]);
+
+    const reaped = await reapExpiredHolds(ctx.db, { now: new Date(Date.now() + 60_000), ttlSeconds: 1 });
+    expect(reaped.expired).toBe(0);
+    expect(await getBalance(ctx.db, "user_1")).toBe(0);
+    expect(await listHeldReservations(ctx.db, "user_1")).toEqual([]);
+    expect((await getAccount(ctx.db, "user_1")).paused).toBe(true);
+    const breakdown = await balanceBreakdown(ctx.db, "user_1");
+    expect(breakdown.heldReserves).toBe(0);
+    expect(breakdown.balance).toBe(0);
+    expect(breakdown.balance).toBe(breakdown.expected);
+  });
+
+  it("finds a dispute grant from charge.payment_intent or a stored charge id", async () => {
+    const ctx = await tempDb();
+    cleanups.push(ctx.cleanup);
+    await handleStripeEvent(
+      ctx.db,
+      checkoutEvent({ id: "evt_nested", sessionId: "cs_nested", packId: "pack_100" }),
+      testEnv,
+    );
+    const nested = await handleStripeEvent(
+      ctx.db,
+      {
+        id: "evt_nested_dispute",
+        type: "charge.dispute.created",
+        livemode: false,
+        data: {
+          object: {
+            id: "dp_nested",
+            object: "dispute",
+            charge: { id: "ch_nested", payment_intent: "pi_cs_nested" },
+          },
+        },
+      },
+      testEnv,
+    );
+    expect(nested).toMatchObject({ reason: "clawed_back", clawedBack: 100, paused: false });
+
+    await handleStripeEvent(
+      ctx.db,
+      checkoutEvent({
+        id: "evt_by_charge",
+        sessionId: "cs_by_charge",
+        userId: "user_2",
+        packId: "pack_100",
+        chargeId: "ch_stored",
+      }),
+      testEnv,
+    );
+    const byCharge = await handleStripeEvent(
+      ctx.db,
+      {
+        id: "evt_by_charge_dispute",
+        type: "charge.dispute.created",
+        livemode: false,
+        data: { object: { id: "dp_charge", object: "dispute", charge: "ch_stored" } },
+      },
+      testEnv,
+    );
+    expect(byCharge).toMatchObject({ reason: "clawed_back", clawedBack: 100 });
+    expect(await getBalance(ctx.db, "user_2")).toBe(0);
   });
 
   it("rejects a livemode mismatch before inserting the event", async () => {
@@ -284,7 +386,8 @@ describe("accepted review fixes", () => {
       testEnv,
     );
     const after = await balanceBreakdown(ctx.db, "user_1");
-    expect(after.clawbacks).toBe(40);
+    expect(after.heldReserves).toBe(0);
+    expect(after.clawbacks).toBe(70);
     expect(after.expected).toBe(0);
     expect(after.balance).toBe(after.expected);
   });

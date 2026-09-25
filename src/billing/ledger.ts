@@ -183,6 +183,7 @@ async function insertEntry(
     stripeEventId: string | null;
     checkoutSessionId: string | null;
     paymentIntentId: string | null;
+    chargeId?: string | null;
     packId: string | null;
     note: string | null;
     livemode: boolean | null;
@@ -191,8 +192,8 @@ async function insertEntry(
   const id = entry.id ?? randomUUID();
   await tx.run(
     `INSERT INTO credit_ledger_entries
-      (id, user_id, delta, kind, status, idempotency_key, stripe_event_id, checkout_session_id, payment_intent_id, pack_id, note, livemode, created_at, seq)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (id, user_id, delta, kind, status, idempotency_key, stripe_event_id, checkout_session_id, payment_intent_id, charge_id, pack_id, note, livemode, created_at, seq)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       entry.userId,
@@ -203,6 +204,7 @@ async function insertEntry(
       entry.stripeEventId,
       entry.checkoutSessionId,
       entry.paymentIntentId,
+      entry.chargeId ?? null,
       entry.packId,
       entry.note,
       entry.livemode === null ? null : entry.livemode ? 1 : 0,
@@ -259,7 +261,7 @@ async function grantReplay(tx: Executor, input: GrantInput): Promise<boolean> {
   return false;
 }
 
-/** Grant inside an existing transaction (webhook path). A new grant clears pause. */
+/** Grant inside an existing transaction (webhook path). Does not clear pause. */
 export async function applyGrant(tx: Executor, input: GrantInput): Promise<{ balance: number; replay: boolean }> {
   assertUserId(input.userId);
   assertPositiveInt(input.credits);
@@ -273,7 +275,7 @@ export async function applyGrant(tx: Executor, input: GrantInput): Promise<{ bal
   }
   await tx.run(
     `UPDATE credit_balances
-     SET balance = balance + ?, paused = 0, updated_at = ?
+     SET balance = balance + ?, updated_at = ?
      WHERE user_id = ?`,
     [input.credits, isoNow(), input.userId],
   );
@@ -286,6 +288,7 @@ export async function applyGrant(tx: Executor, input: GrantInput): Promise<{ bal
     stripeEventId: input.stripeEventId ?? null,
     checkoutSessionId: input.checkoutSessionId ?? null,
     paymentIntentId: input.paymentIntentId ?? null,
+    chargeId: input.chargeId ?? null,
     packId: input.packId,
     note: input.note ?? null,
     livemode: input.livemode ?? null,
@@ -295,6 +298,57 @@ export async function applyGrant(tx: Executor, input: GrantInput): Promise<{ bal
 
 export async function grantCredits(db: Db, input: GrantInput): Promise<{ balance: number; replay: boolean }> {
   return db.transaction((tx) => applyGrant(tx, input));
+}
+
+/** Demo or admin only. Grants do not call this. */
+export async function unpauseUser(db: Db, userId: string): Promise<void> {
+  assertUserId(userId);
+  await db.transaction(async (tx) => {
+    await lockBalanceRow(tx, userId);
+    await tx.run(`UPDATE credit_balances SET paused = 0, updated_at = ? WHERE user_id = ?`, [isoNow(), userId]);
+  });
+}
+
+/** Return every open hold before a clawback debit. Same transaction as the debit. */
+async function releaseHeldForClawback(tx: Executor, userId: string): Promise<number> {
+  const holds = await tx.all<EntryRow>(
+    `SELECT ${ENTRY_COLUMNS} FROM credit_ledger_entries
+     WHERE user_id = ? AND kind = 'reserve' AND status = 'held'
+     ORDER BY seq ASC`,
+    [userId],
+  );
+  let released = 0;
+  for (const hold of holds) {
+    const claimed = await tx.get<{ id: string }>(
+      `UPDATE credit_ledger_entries
+       SET status = 'released'
+       WHERE id = ? AND user_id = ? AND status = 'held'
+       RETURNING id`,
+      [hold.id, userId],
+    );
+    if (!claimed) continue;
+    const amount = -asInt(hold.delta);
+    if (amount <= 0) throw new LedgerError("invalid_reservation_delta");
+    await tx.run(
+      `UPDATE credit_balances SET balance = balance + ?, updated_at = ? WHERE user_id = ?`,
+      [amount, isoNow(), userId],
+    );
+    await insertEntry(tx, {
+      userId,
+      delta: amount,
+      kind: "release",
+      status: "released",
+      idempotencyKey: null,
+      stripeEventId: null,
+      checkoutSessionId: null,
+      paymentIntentId: null,
+      packId: null,
+      note: "Released for refund or dispute",
+      livemode: null,
+    });
+    released += 1;
+  }
+  return released;
 }
 
 export type ClawbackInput = {
@@ -315,9 +369,13 @@ export type ClawbackResult = {
 };
 
 /**
- * Remove up to `credits` from the spendable balance. If the user already spent
- * part of the grant, take what is left, pause the user, and journal the shortfall.
- * One clawback row per payment intent. A later new grant clears the pause.
+ * Close every open hold for the user, then remove up to `credits` from the
+ * spendable balance. Holds are released in this transaction so a later reaper
+ * pass cannot put refunded credits back. If the user already finalized or
+ * tracked part of the grant, take what is left, journal the shortfall, and pause.
+ * Closing a hold also pauses: that work may already be in flight. A later grant
+ * does not clear the pause. Call unpauseUser from a demo or admin path.
+ * One clawback row per payment intent.
  */
 export async function applyClawback(tx: Executor, input: ClawbackInput): Promise<ClawbackResult> {
   assertUserId(input.userId);
@@ -343,6 +401,7 @@ export async function applyClawback(tx: Executor, input: ClawbackInput): Promise
     };
   }
 
+  const holdsReleased = await releaseHeldForClawback(tx, input.userId);
   const balance = await balanceOf(tx, input.userId);
   const clawedBack = Math.min(balance, input.credits);
   const shortfall = input.credits - clawedBack;
@@ -369,12 +428,7 @@ export async function applyClawback(tx: Executor, input: ClawbackInput): Promise
     note: input.note,
     livemode: null,
   });
-  let paused = false;
   if (shortfall > 0) {
-    await tx.run(`UPDATE credit_balances SET paused = 1, updated_at = ? WHERE user_id = ?`, [
-      isoNow(),
-      input.userId,
-    ]);
     await insertEntry(tx, {
       userId: input.userId,
       delta: 0,
@@ -388,8 +442,19 @@ export async function applyClawback(tx: Executor, input: ClawbackInput): Promise
       note: `shortfall ${shortfall} credits`,
       livemode: null,
     });
-    paused = true;
   }
+  const shouldPause = shortfall > 0 || holdsReleased > 0;
+  if (shouldPause) {
+    await tx.run(`UPDATE credit_balances SET paused = 1, updated_at = ? WHERE user_id = ?`, [
+      isoNow(),
+      input.userId,
+    ]);
+  }
+  const pausedRow = await tx.get<{ paused: unknown }>(
+    `SELECT paused FROM credit_balances WHERE user_id = ?`,
+    [input.userId],
+  );
+  const paused = shouldPause || asBool(pausedRow?.paused) === true;
   return {
     balance: await balanceOf(tx, input.userId),
     clawedBack,

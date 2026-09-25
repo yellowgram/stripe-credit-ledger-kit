@@ -39,6 +39,7 @@ export {
   reserve,
   seedDemoUser,
   track,
+  unpauseUser,
 } from "./ledger";
 export { createCreditPackCheckout } from "./checkout";
 export { expectedLivemode, handleStripeEvent, verifyStripeEvent } from "./webhook";
