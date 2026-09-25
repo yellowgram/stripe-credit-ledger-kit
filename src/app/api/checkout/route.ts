@@ -18,7 +18,7 @@ export async function POST(req: Request): Promise<Response> {
     if (!secret || secret.includes("replace_me")) {
       throw new LedgerError("missing_stripe_secret_key");
     }
-    const origin = appOrigin(req);
+    const origin = appOrigin();
     const stripe = new Stripe(secret);
     const session = await createCreditPackCheckout(stripe, {
       packId,

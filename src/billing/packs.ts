@@ -10,8 +10,9 @@ export type CreditPack = {
 
 /**
  * One-time Checkout packs. Edit prices and sizes here.
- * The webhook grants `credits` only when metadata.packId matches one of these
- * and metadata.credits equals that pack's credit count.
+ * The webhook grants pack.credits when metadata.packId matches one of these,
+ * session.amount_total equals amountCents, and currency matches.
+ * metadata.credits is not authority.
  */
 export const PACKS: readonly CreditPack[] = [
   {

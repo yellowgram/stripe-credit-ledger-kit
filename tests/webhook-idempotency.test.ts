@@ -85,7 +85,7 @@ describe("webhook idempotency", () => {
     expect(await getBalance(ctx.db, "user_1")).toBe(500);
   });
 
-  it("rolls back the event row when pack metadata does not match the catalog", async () => {
+  it("rolls back the event row when the paid amount does not match the pack", async () => {
     const ctx = await tempDb();
     cleanups.push(ctx.cleanup);
     const event = checkoutEvent({
@@ -93,11 +93,26 @@ describe("webhook idempotency", () => {
       sessionId: "cs_bad",
       credits: 99999,
       packId: "pack_100",
+      amountTotal: 1,
     });
 
-    await expect(handleStripeEvent(ctx.db, event)).rejects.toThrow(/pack_mismatch/);
+    await expect(handleStripeEvent(ctx.db, event)).rejects.toThrow(/amount_mismatch/);
     expect(await getBalance(ctx.db, "user_1")).toBe(0);
     const count = await ctx.db.get<{ n: number }>(`SELECT COUNT(*) AS n FROM stripe_events`);
     expect(Number(count?.n)).toBe(0);
+  });
+
+  it("grants catalog credits when metadata.credits disagrees with the pack", async () => {
+    const ctx = await tempDb();
+    cleanups.push(ctx.cleanup);
+    const event = checkoutEvent({
+      id: "evt_meta",
+      sessionId: "cs_meta",
+      credits: 99999,
+      packId: "pack_100",
+    });
+    const result = await handleStripeEvent(ctx.db, event);
+    expect(result.granted).toBe(true);
+    expect(await getBalance(ctx.db, "user_1")).toBe(100);
   });
 });

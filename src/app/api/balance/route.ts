@@ -1,5 +1,5 @@
-import { PACKS, getBalance, listEntries } from "@/billing";
-import { demoUserId, getDb, ready } from "@/server/ledger";
+import { PACKS, getAccount, listEntries } from "@/billing";
+import { demoControlsEnabled, demoUserId, getDb, ready } from "@/server/ledger";
 import { errorResponse } from "@/server/http";
 
 export const runtime = "nodejs";
@@ -10,8 +10,15 @@ export async function GET(): Promise<Response> {
     await ready();
     const userId = demoUserId();
     const db = getDb();
-    const [balance, entries] = await Promise.all([getBalance(db, userId), listEntries(db, userId, 12)]);
-    return Response.json({ userId, balance, packs: PACKS, entries });
+    const [account, entries] = await Promise.all([getAccount(db, userId), listEntries(db, userId, 12)]);
+    return Response.json({
+      userId,
+      balance: account.balance,
+      paused: account.paused,
+      demoControls: demoControlsEnabled(),
+      packs: PACKS,
+      entries,
+    });
   } catch (error) {
     return errorResponse(error);
   }

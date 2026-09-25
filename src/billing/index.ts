@@ -13,7 +13,7 @@ export type {
 } from "./types";
 export { PACKS, creditPackMetadata, getPack } from "./packs";
 export type { CreditPack } from "./packs";
-export { SCHEMA_STATEMENTS, ensureSchema } from "./schema";
+export { ensureSchema } from "./schema";
 export {
   createDbFromEnv,
   createPostgresDb,
@@ -22,18 +22,24 @@ export {
   toPostgresParams,
 } from "./db";
 export {
+  DEFAULT_HOLD_TTL_SECONDS,
+  applyClawback,
   applyGrant,
+  balanceBreakdown,
   check,
   finalize,
+  getAccount,
   getBalance,
   grantCredits,
+  holdTtlSeconds,
   listEntries,
   listHeldReservations,
+  reapExpiredHolds,
   release,
   reserve,
   seedDemoUser,
   track,
 } from "./ledger";
 export { createCreditPackCheckout } from "./checkout";
-export { handleStripeEvent, verifyStripeEvent } from "./webhook";
+export { expectedLivemode, handleStripeEvent, verifyStripeEvent } from "./webhook";
 export type { StripeEventInput, WebhookResult } from "./webhook";

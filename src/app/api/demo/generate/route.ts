@@ -1,6 +1,6 @@
 import { runDemoGeneration } from "@/demo/llm";
 import { errorResponse, positiveInt, readJson } from "@/server/http";
-import { demoUserId, getDb, ready } from "@/server/ledger";
+import { demoControlsEnabled, demoUserId, getDb, ready } from "@/server/ledger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +11,9 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: Request): Promise<Response> {
   try {
+    if (!demoControlsEnabled()) {
+      return Response.json({ error: "demo_controls_disabled" }, { status: 404 });
+    }
     await ready();
     const body = await readJson(req);
     const credits = positiveInt(body.credits, 10);

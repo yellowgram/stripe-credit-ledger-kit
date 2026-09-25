@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createSqliteDb } from "../src/billing/db";
+import { getPack } from "../src/billing/packs";
 import { ensureSchema } from "../src/billing/schema";
 import type { Db } from "../src/billing/types";
 import type { StripeEventInput } from "../src/billing/webhook";
@@ -62,19 +63,31 @@ export function checkoutEvent(input: {
   credits?: number;
   packId?: string;
   paymentStatus?: string;
+  amountTotal?: number;
+  currency?: string;
+  paymentIntentId?: string | null;
+  livemode?: boolean;
 }): StripeEventInput {
+  const packId = input.packId ?? "pack_100";
+  const pack = getPack(packId);
+  const paymentIntent =
+    input.paymentIntentId === undefined ? `pi_${input.sessionId}` : input.paymentIntentId;
   return {
     id: input.id,
     type: input.type ?? "checkout.session.completed",
+    livemode: input.livemode ?? false,
     data: {
       object: {
         id: input.sessionId,
         object: "checkout.session",
         payment_status: input.paymentStatus ?? "paid",
+        amount_total: input.amountTotal ?? pack?.amountCents ?? 500,
+        currency: input.currency ?? pack?.currency ?? "usd",
+        payment_intent: paymentIntent,
         metadata: {
           userId: input.userId ?? "user_1",
-          credits: String(input.credits ?? 100),
-          packId: input.packId ?? "pack_100",
+          credits: String(input.credits ?? pack?.credits ?? 100),
+          packId,
         },
       },
     },

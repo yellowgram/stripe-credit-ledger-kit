@@ -58,12 +58,14 @@ Neon or Supabase: use their connection string and add `?sslmode=require` if the 
 
 **SQLite (zero-ops demo).** Leave `DATABASE_URL` unset. `SQLITE_PATH=./data/ledger.sqlite` in `.env.example` is enough. Same SQL, same tests. Do not treat a single SQLite file as a multi-server production database.
 
+For the local walkthrough, set `ALLOW_DEMO_CONTROLS=true` in `.env.local` before the commands below. That seeds the demo user with **100** credits and shows spend, race, and reset. The default is `false`: no seed, and those routes return 404. There is no login. Do not deploy the demo shell as a public app.
+
 ```bash
 npm run db:migrate
 npm run dev
 ```
 
-Open http://localhost:3000. The demo user starts at **100** credits. There is no login. Every button on that page spends `DEMO_USER_ID`. Do not deploy the demo shell as a public app.
+Open http://localhost:3000.
 
 ### Take a real test payment
 
@@ -97,9 +99,9 @@ This fixture is local. It does not charge a card. Use Checkout when you want to 
 - **Spend 10 (succeeds)** — reserve, then finalize. Balance drops by 10.
 - **Spend 10 (provider fails)** — reserve, fake HTTP 500, release. Balance returns.
 - **Last-credit race** — sets the balance to 10, fires two spends of 10. One succeeds, one is insufficient, balance ends at 0.
-- **Reset demo balance to 100** — demo only. Turn it off with `ALLOW_DEMO_CONTROLS=false`.
+- **Reset demo balance to 100** — demo only. These four controls exist only when `ALLOW_DEMO_CONTROLS=true`.
 
-`npm test` runs the same edges against SQLite files. It does not call Stripe.
+`npm test` runs the same edges against SQLite files. It does not call Stripe. GitHub Actions also runs them against Postgres.
 
 ## Environment
 
@@ -109,23 +111,26 @@ See `.env.example`.
 |---|---|---|
 | `STRIPE_SECRET_KEY` | To open Checkout | `sk_test_...` while you are testing. Never commit a live key. |
 | `STRIPE_WEBHOOK_SECRET` | To accept webhooks | `whsec_...` from `stripe listen` or the Dashboard endpoint. |
-| `NEXT_PUBLIC_APP_URL` | Recommended | Success and cancel URLs. Default `http://localhost:3000`. |
+| `NEXT_PUBLIC_APP_URL` | Recommended | The only origin for Checkout `success_url` and `cancel_url`. Default `http://localhost:3000`. `x-forwarded-host` is ignored. |
 | `DATABASE_URL` | Production | `postgres://` or `postgresql://`. Wins over SQLite when set. |
 | `SQLITE_PATH` | Dev alternate | File path. Ignored when `DATABASE_URL` is Postgres. |
 | `DEMO_USER_ID` | Demo | Balance owner for the shell. Default `demo_user`. |
-| `ALLOW_DEMO_CONTROLS` | Demo | `false` disables reset and the race button. |
+| `ALLOW_DEMO_CONTROLS` | Demo | Default **false**. `true` seeds 100 credits and enables spend, race, and reset. The shell is not production. |
+| `CREDIT_HOLD_TTL_SECONDS` | Optional | How long a hold stays `held` before the reaper returns the credits. Default `900` (15 minutes). |
+| `STRIPE_EXPECT_LIVEMODE` | Optional | `true` or `false` overrides the key prefix. Unset: `sk_live_` expects live events; every other key expects test events. |
 
-The app creates tables on boot (`ensureSchema`) and seeds the demo user once (`seed:<userId>`). `npm run db:migrate` does the same without starting Next.js.
+The app creates tables on boot (`ensureSchema`). It seeds the demo user (`seed:<userId>`) only when `ALLOW_DEMO_CONTROLS=true`. `npm run db:migrate` follows the same rule.
 
 ## Flows
 
 ### 1. Top-up
 
 1. `POST /api/checkout` with `{ "packId": "pack_500" }` creates a Checkout Session in `mode: "payment"`.
-2. Metadata and `payment_intent_data.metadata` are `{ userId, credits, packId }`. `client_reference_id` repeats `userId`. `credits` is the catalog value, not a client-supplied number.
-3. On `checkout.session.completed` with `payment_status=paid` (or `checkout.session.async_payment_succeeded`), the handler verifies the Stripe signature, inserts `stripe_events.id`, and grants inside **one** transaction.
-4. The same `event.id` again is a no-op. A second event for the same Checkout Session id does not grant again.
-5. `credits` must match the pack in `src/billing/packs.ts`. A mismatch throws and **rolls the event insert back** so you notice. Fix the bug; Stripe will retry.
+2. Metadata and `payment_intent_data.metadata` are `{ userId, credits, packId }`. `client_reference_id` repeats `userId`. `credits` is written for the Dashboard. It is **not** the grant authority.
+3. On `checkout.session.completed` with `payment_status=paid` (or `checkout.session.async_payment_succeeded`), the handler verifies the Stripe signature, checks livemode, inserts `stripe_events.id`, and grants inside **one** transaction.
+4. The grant size is `getPack(packId).credits`. `session.amount_total` must equal that pack’s `amountCents`, and `currency` must match. A mismatch throws and **rolls the event insert back**. Fix the bug; Stripe retries (HTTP 500).
+5. The same `event.id` again is a no-op. A second event for the same Checkout Session id does not grant again.
+6. `livemode` is stored on `stripe_events` and on the grant row. A live event against a test key (or the reverse) is rejected before the event id is inserted.
 
 ### 2. Check
 
@@ -144,17 +149,17 @@ if (!reserved.ok) {
 }
 try {
   const output = await callYourModel();
-  await finalize(db, idempotencyKey);
+  await finalize(db, userId, idempotencyKey);
   return output;
 } catch {
-  await release(db, idempotencyKey);
+  await release(db, userId, idempotencyKey);
   throw;
 }
 ```
 
-The same reserve key returns the existing hold and does not decrement again. A key that failed only because the balance was short is **not** burned; retry it after a top-up. A key that reserved successfully stays at-most-once.
+Idempotency is `(user_id, idempotency_key)`. Two users may use the same key. `reserve` returns `ok: true` only when that user’s key is still `held` and the amount matches. A replay of a released, finalized, or expired hold returns an error and does not spend again. A different amount on the same key returns `idempotency_amount_mismatch`. A key that failed only because the balance was short is **not** burned; retry it after a top-up.
 
-`track(userId, amount, idempotencyKey)` is the simpler at-most-once decrement for work you will not roll back. Prefer reserve around LLM calls.
+`POST /api/credits/track` requires a client `idempotencyKey`. The server does not invent one. `track(userId, amount, idempotencyKey)` is the simpler at-most-once decrement for work you will not roll back. Prefer reserve around LLM calls.
 
 The hard gate is one statement, after the user’s balance row is locked in the transaction:
 
@@ -171,7 +176,31 @@ Zero rows means insufficient credits. Two connections cannot both take the last 
 
 `POST /api/demo/generate` with `{ "credits": 10, "fail": true }` reserves 10, throws a fake provider 500, and releases. Net balance change: 0. Ledger kinds: `reserve` (status `released`) and `release`.
 
-A successful call finalizes. Releasing a finalized reservation returns `already_finalized` and does not refund. Releasing twice is a replay and does not refund twice.
+A successful call finalizes. Releasing a finalized reservation returns `already_finalized` and does not refund. Releasing twice is a replay and does not refund twice. Calling `reserve` again with that finished key returns an error. It is not a second free inference.
+
+## Hold TTL and the reaper
+
+A crash after `reserve` and before `finalize` or `release` would otherwise leave credits held forever. Holds older than `CREDIT_HOLD_TTL_SECONDS` (default **900**, fifteen minutes) are expired: status becomes `expired`, an `expire` journal row is appended, and the reserved credits return to the balance.
+
+`reserve` calls `reapExpiredHolds` first, and the demo process calls it on boot. In your app, also call it on an interval. One call expires at most 200 holds; call again if you expect more. An expired key stays consumed (`hold_expired`). Start a new key for a new call.
+
+## Refunds and disputes
+
+`charge.refunded` and `charge.dispute.created` claw back the **full pack**, not a prorated cent amount. The handler looks up the grant by `payment_intent` id, removes `min(balance, grant credits)`, and writes one `clawback` row per payment intent.
+
+If the user already spent part of the grant, the remainder is removed, the shortfall is journaled (`kind = shortfall`, delta 0), and `credit_balances.paused` is set. `reserve` and `track` then return `account_paused`. A later successful grant clears the pause. There is no dispute state machine and no manual unpause route.
+
+A refund that arrives before the grant throws, rolls back the event row, and returns HTTP 500 so Stripe retries. A second refund or dispute for the same payment intent is `already_clawed_back`.
+
+Partial refunds are treated as a full pack reversal. Proration is not implemented.
+
+## Balance invariant
+
+For each user, the spendable balance equals:
+
+`sum(grant deltas) − finalized spends − held reserves − clawbacks`
+
+Finalized spends are track amounts plus reserve rows with status `finalized`. Released and expired reserves are omitted, because those credits are already back. Release, expire, finalize, and shortfall journal rows are not added a second time. `balanceBreakdown` computes this and the tests require `expected === balance`.
 
 ## Pack catalog
 
@@ -183,7 +212,7 @@ Edit `src/billing/packs.ts`. Three packs ship in the kit:
 | `pack_500` | 500 | $20 |
 | `pack_2000` | 2000 | $60 |
 
-Prices are demo numbers. Change them. The webhook refuses a grant whose `credits` do not match the pack id, so update both together. Checkout uses `price_data` (no Dashboard Price objects required).
+Prices are demo numbers. Change them in `src/billing/packs.ts`. The webhook grants `pack.credits` only when `amount_total` and currency match that row. Checkout uses `price_data` (no Dashboard Price objects required).
 
 ## Tests
 
@@ -193,12 +222,15 @@ npm test
 
 | Test | What it proves |
 |---|---|
-| `tests/webhook-idempotency.test.ts` | Signature verify. Same event twice does not double-grant. Two connections delivering one event grant once. Pack mismatch rolls back. |
+| `tests/webhook-idempotency.test.ts` | Signature verify. Same event twice does not double-grant. Two connections delivering one event grant once. Amount mismatch rolls back. `metadata.credits` is ignored. |
 | `tests/out-of-order.test.ts` | `payment_intent.succeeded` does not grant. Unpaid `checkout.session.completed` does not grant. A later async success grants once. A late paid completion for that session does not grant again. |
-| `tests/concurrent-race.test.ts` | Two OS threads, two SQLite connections, one balance of 10. One reserve wins. The demo race helper agrees. |
+| `tests/concurrent-race.test.ts` | Two processes, two SQLite connections, one balance of 10. One reserve wins. The demo race helper agrees. |
 | `tests/failed-after-reserve.test.ts` | Provider failure releases. Second release does not refund. Finalize then release does not refund. `track` is at-most-once. |
+| `tests/review-fixes.test.ts` | Fail-closed replay, per-user keys, reaper, refund/dispute clawback, livemode, currency, balance invariant. |
+| `tests/webhook-status.test.ts` | Signature and placeholder secret are HTTP 400. Livemode and amount failures are HTTP 500. Track requires a client key. Demo controls default off. Checkout origin is `NEXT_PUBLIC_APP_URL`. |
+| `tests/postgres-concurrency.test.ts` | Skipped unless `DATABASE_URL` is Postgres. Two-process last-credit race and webhook replay on Postgres. |
 
-The race test spawns two processes so the decrement is not just serialized on one connection’s mutex. `npm test` needs no Postgres and no Stripe network.
+The race test spawns two processes so the decrement is not just serialized on one connection’s mutex. `npm test` needs no Postgres and no Stripe network. The GitHub Actions `postgres` job sets `DATABASE_URL` and runs the same suite, including the Postgres race. The gate stays `UPDATE … AND balance >= ?`. It does not require `SERIALIZABLE`.
 
 ## Copy the billing module
 
@@ -220,14 +252,16 @@ Routes in this repo attribute every call to `DEMO_USER_ID`. In your app, ignore 
 | What happened | What the kit does |
 |---|---|
 | Bad or missing `Stripe-Signature` | HTTP 400. No database write. |
-| Webhook secret still `replace_me` | HTTP 400. |
-| Database down mid-webhook | HTTP 500. The `stripe_events` insert rolls back. Stripe retries. A later success grants once. |
+| Webhook secret missing or still `replace_me` | HTTP 400. |
+| Database down, livemode mismatch, amount or currency mismatch, refund before the grant | HTTP 500. A mismatch rolls the `stripe_events` insert back. Stripe retries. |
 | Retry storm of the same `event.id` | Unique `stripe_events.id`. One grant. |
 | `checkout.session.completed` and `async_payment_succeeded` for one session | Unique `checkout_session_id` on the grant row. One grant. |
 | Unpaid `checkout.session.completed` | Event stored. No grant. The async success event can still grant. |
-| Metadata missing or credits ≠ catalog | HTTP 500, transaction rolled back (including the event row) so the mistake stays loud. |
+| `charge.refunded` or `charge.dispute.created` | Full-pack clawback. Shortfall pauses the user. |
 | Balance too low | `reserve` / `track` return `insufficient_credits`. Demo spend routes use HTTP 402. |
 | Provider error after reserve | `release` returns the credits. |
+| Same key after release, finalize, or expiry | Error. Not `ok: true`. |
+| Hold older than the TTL | Reaper returns the credits. |
 | Two spends of the last credit | One `UPDATE ... WHERE balance >= ?` wins. |
 
 Stripe retries non-2xx responses for days. Return 500 only when a retry could succeed (database blip, bug you are about to fix). Signature failures stay 400 so Stripe stops.

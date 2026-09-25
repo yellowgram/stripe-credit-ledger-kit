@@ -1,4 +1,4 @@
-import { createDbFromEnv, ensureSchema, seedDemoUser, type Db } from "@/billing";
+import { createDbFromEnv, ensureSchema, reapExpiredHolds, seedDemoUser, type Db } from "@/billing";
 
 const globalStore = globalThis as unknown as {
   __creditLedgerDb?: Db;
@@ -10,8 +10,9 @@ export function demoUserId(): string {
   return configured || "demo_user";
 }
 
+/** Default off. Set ALLOW_DEMO_CONTROLS=true only for a local walkthrough. */
 export function demoControlsEnabled(): boolean {
-  return process.env.ALLOW_DEMO_CONTROLS !== "false";
+  return process.env.ALLOW_DEMO_CONTROLS === "true";
 }
 
 export function getDb(): Db {
@@ -27,7 +28,10 @@ export function ready(): Promise<void> {
     const userId = demoUserId();
     globalStore.__creditLedgerReady = (async () => {
       await ensureSchema(db);
-      await seedDemoUser(db, userId, 100);
+      await reapExpiredHolds(db);
+      if (demoControlsEnabled()) {
+        await seedDemoUser(db, userId, 100);
+      }
     })().catch((error: unknown) => {
       globalStore.__creditLedgerReady = undefined;
       throw error;
@@ -36,10 +40,8 @@ export function ready(): Promise<void> {
   return globalStore.__creditLedgerReady;
 }
 
-export function appOrigin(req: Request): string {
+/** Checkout return URLs. Request headers are ignored so a proxy cannot redirect the buyer. */
+export function appOrigin(): string {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-  if (configured) return configured;
-  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
-  const proto = req.headers.get("x-forwarded-proto") ?? "http";
-  return host ? `${proto}://${host}` : "http://localhost:3000";
+  return configured || "http://localhost:3000";
 }

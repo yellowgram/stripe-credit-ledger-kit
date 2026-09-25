@@ -30,19 +30,7 @@ export async function runDemoGeneration(
   if (!reserved.ok) {
     return {
       ok: false,
-      error: "insufficient_credits",
-      balance: reserved.balance,
-      idempotencyKey,
-      output: null,
-    };
-  }
-  if (reserved.status === "finalized") {
-    return { ok: true, replay: true, balance: reserved.balance, idempotencyKey, output: null };
-  }
-  if (reserved.status === "released") {
-    return {
-      ok: false,
-      error: "already_released",
+      error: reserved.error,
       balance: reserved.balance,
       idempotencyKey,
       output: null,
@@ -53,9 +41,9 @@ export async function runDemoGeneration(
     if (input.fail) {
       throw new Error("provider_500");
     }
-    const done = await finalize(db, idempotencyKey);
+    const done = await finalize(db, input.userId, idempotencyKey);
     if (!done.ok) {
-      const released = await release(db, idempotencyKey);
+      const released = await release(db, input.userId, idempotencyKey);
       return {
         ok: false,
         error: done.error,
@@ -72,7 +60,7 @@ export async function runDemoGeneration(
       output: "Demo completion. No model was called — this shell only proves the ledger.",
     };
   } catch (error) {
-    const released = await release(db, idempotencyKey);
+    const released = await release(db, input.userId, idempotencyKey);
     return {
       ok: false,
       error: "llm_failed_credits_released",

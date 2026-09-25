@@ -11,7 +11,8 @@ export default function HomePage() {
       <p className="lede">
         Checkout packs grant a balance. <code>check</code> is advisory. <code>reserve</code> then{" "}
         <code>finalize</code> or <code>release</code> is the hard gate. This page is a thin demo shell,
-        not a chat product. You own the code. Nothing here is hosted for you.
+        not a chat product and not a production app. Spend buttons stay off unless{" "}
+        <code>ALLOW_DEMO_CONTROLS=true</code>. You own the code. Nothing here is hosted for you.
       </p>
 
       <Suspense fallback={<p className="loading">Loading balance…</p>}>

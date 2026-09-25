@@ -1,8 +1,9 @@
-import { createSqliteDb } from "../../src/billing/db";
+import { createPostgresDb, createSqliteDb } from "../../src/billing/db";
 import { handleStripeEvent, type StripeEventInput } from "../../src/billing/webhook";
 
 type Input = {
-  dbPath: string;
+  dbPath?: string;
+  databaseUrl?: string;
   event: StripeEventInput;
 };
 
@@ -16,7 +17,7 @@ async function readStdin(): Promise<string> {
 
 async function main() {
   const input = JSON.parse(await readStdin()) as Input;
-  const db = createSqliteDb(input.dbPath);
+  const db = input.databaseUrl ? createPostgresDb(input.databaseUrl) : createSqliteDb(input.dbPath ?? "");
   try {
     const result = await handleStripeEvent(db, input.event);
     process.stdout.write(JSON.stringify(result));

@@ -11,7 +11,7 @@ export async function resetDemoUser(db: Db, userId: string, target = 100): Promi
   }
   const held = await listHeldReservations(db, userId);
   for (const reservation of held) {
-    await release(db, reservation.idempotencyKey);
+    await release(db, userId, reservation.idempotencyKey);
   }
   const balance = await getBalance(db, userId);
   if (balance === target) return { balance };

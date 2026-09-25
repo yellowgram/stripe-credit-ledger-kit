@@ -1,6 +1,5 @@
 import Stripe from "stripe";
 import { LedgerError, handleStripeEvent, verifyStripeEvent } from "@/billing";
-import { errorResponse } from "@/server/http";
 import { getDb, ready } from "@/server/ledger";
 
 export const runtime = "nodejs";
@@ -30,6 +29,10 @@ export async function POST(req: Request): Promise<Response> {
     const result = await handleStripeEvent(getDb(), event);
     return Response.json({ received: true, ...result });
   } catch (error) {
-    return errorResponse(error);
+    // Retryable: database blips, livemode mismatch, amount mismatch, unexpected throws.
+    // Signature failures returned 400 above. Do not map every LedgerError to 400.
+    console.error(error);
+    const code = error instanceof LedgerError ? error.code : "internal_error";
+    return Response.json({ error: code }, { status: 500 });
   }
 }

@@ -12,8 +12,12 @@ async function main(): Promise<void> {
   const userId = process.env.DEMO_USER_ID?.trim() || "demo_user";
 
   await ensureSchema(db);
-  await seedDemoUser(db, userId, 100);
-  console.log(`Schema ready. Demo user "${userId}" has a starting balance if this was the first boot.`);
+  if (process.env.ALLOW_DEMO_CONTROLS === "true") {
+    await seedDemoUser(db, userId, 100);
+    console.log(`Schema ready. Demo user "${userId}" seeded with 100 credits if this was the first boot.`);
+  } else {
+    console.log("Schema ready. Demo seed skipped (set ALLOW_DEMO_CONTROLS=true for the local walkthrough).");
+  }
   await db.close();
 }
 

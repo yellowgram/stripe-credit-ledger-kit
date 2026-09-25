@@ -15,6 +15,8 @@ if (!secret || secret.includes("replace_me")) {
   process.exit(1);
 }
 
+const webhookSecret: string = secret;
+
 const statePath = path.resolve("data/last-demo-event.json");
 let eventId = `evt_demo_${Date.now()}`;
 let sessionId = `cs_demo_${Date.now()}`;
@@ -45,6 +47,9 @@ const event = {
       object: "checkout.session",
       payment_status: "paid",
       mode: "payment",
+      amount_total: 500,
+      currency: "usd",
+      payment_intent: `pi_${sessionId}`,
       metadata: {
         userId: process.env.DEMO_USER_ID?.trim() || "demo_user",
         credits: "100",
@@ -57,7 +62,7 @@ const event = {
 async function main(): Promise<void> {
   const payload = JSON.stringify(event);
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_signature_only");
-  const signature = stripe.webhooks.generateTestHeaderString({ payload, secret });
+  const signature = stripe.webhooks.generateTestHeaderString({ payload, secret: webhookSecret });
 
   const response = await fetch(`${base}/api/webhooks/stripe`, {
     method: "POST",

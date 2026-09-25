@@ -25,6 +25,8 @@ type Entry = {
 type Snapshot = {
   userId: string;
   balance: number;
+  paused?: boolean;
+  demoControls?: boolean;
   packs: Pack[];
   entries: Entry[];
 };
@@ -89,41 +91,56 @@ export function LedgerDemo() {
         <p className="balance-label">Spendable balance</p>
         <p className="balance">{snapshot ? snapshot.balance : "–"}</p>
         <p className="user">
-          Demo user <code>{snapshot?.userId ?? "…"}</code>. No login — every button spends this user.
+          Demo user <code>{snapshot?.userId ?? "…"}</code>. No login. This shell is not a production app.
         </p>
+        {snapshot?.paused ? (
+          <p className="banner">This user is paused after a refund or dispute shortfall. A later grant clears the pause.</p>
+        ) : null}
         {checkout === "success" ? (
           <p className="banner">Stripe sent the browser back. The balance moves when the webhook lands, not when this page loads.</p>
         ) : null}
         {checkout === "cancel" ? <p className="banner">Checkout canceled. No credits granted.</p> : null}
         {error ? <p className="banner">{error}</p> : null}
 
-        <div className="actions" style={{ marginTop: 16 }}>
-          <div className="row">
-            <button className="primary" disabled={pending !== null} onClick={() => run("spend", "/api/demo/generate", { credits: 10, fail: false })}>
-              {pending === "spend" ? "Reserving…" : "Spend 10 (succeeds)"}
-            </button>
-            <button className="danger" disabled={pending !== null} onClick={() => run("fail", "/api/demo/generate", { credits: 10, fail: true })}>
-              {pending === "fail" ? "Releasing…" : "Spend 10 (provider fails)"}
-            </button>
+        {!snapshot ? (
+          <p className="note" style={{ marginTop: 16 }}>Loading demo controls…</p>
+        ) : snapshot.demoControls ? (
+          <div className="actions" style={{ marginTop: 16 }}>
+            <div className="row">
+              <button className="primary" disabled={pending !== null} onClick={() => run("spend", "/api/demo/generate", { credits: 10, fail: false })}>
+                {pending === "spend" ? "Reserving…" : "Spend 10 (succeeds)"}
+              </button>
+              <button className="danger" disabled={pending !== null} onClick={() => run("fail", "/api/demo/generate", { credits: 10, fail: true })}>
+                {pending === "fail" ? "Releasing…" : "Spend 10 (provider fails)"}
+              </button>
+            </div>
+            <div className="row">
+              <button className="ghost" disabled={pending !== null} onClick={() => run("race", "/api/demo/race", { amount: 10 })}>
+                {pending === "race" ? "Racing…" : "Last-credit race (two spends of 10)"}
+              </button>
+              <button className="ghost" disabled={pending !== null} onClick={() => run("reset", "/api/demo/reset", { target: 100 })}>
+                {pending === "reset" ? "Resetting…" : "Reset demo balance to 100"}
+              </button>
+            </div>
           </div>
-          <div className="row">
-            <button className="ghost" disabled={pending !== null} onClick={() => run("race", "/api/demo/race", { amount: 10 })}>
-              {pending === "race" ? "Racing…" : "Last-credit race (two spends of 10)"}
-            </button>
-            <button className="ghost" disabled={pending !== null} onClick={() => run("reset", "/api/demo/reset", { target: 100 })}>
-              {pending === "reset" ? "Resetting…" : "Reset demo balance to 100"}
-            </button>
-          </div>
-        </div>
-        <p className="note" style={{ marginTop: 12 }}>
-          Failed calls reserve, then release. The race sets the balance to 10 and fires two spends. One succeeds.
-        </p>
+        ) : (
+          <p className="note" style={{ marginTop: 16 }}>
+            Spend, race, and reset are off. Set <code>ALLOW_DEMO_CONTROLS=true</code> for a local walkthrough. Buy still opens Checkout.
+          </p>
+        )}
+        {snapshot ? (
+          <p className="note" style={{ marginTop: 12 }}>
+            {snapshot.demoControls
+              ? "Failed calls reserve, then release. The race sets the balance to 10 and fires two spends. One succeeds."
+              : "Your app owns real auth. Do not ship this page as the product."}
+          </p>
+        ) : null}
         {result ? <pre className="result">{JSON.stringify(result, null, 2)}</pre> : null}
       </section>
 
       <section className="card">
         <h2>Buy credits</h2>
-        <p className="note">Stripe Checkout, test mode. Metadata on the session: userId, credits, packId.</p>
+        <p className="note">Stripe Checkout, test mode. The grant uses the catalog and the paid amount. Session metadata is not the credit authority.</p>
         <div className="packs">
           {(snapshot?.packs ?? []).map((pack) => (
             <div className="pack" key={pack.id}>

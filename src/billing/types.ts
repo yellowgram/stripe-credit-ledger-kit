@@ -6,9 +6,17 @@
  * src/billing/db.ts (not part of the MIT extract).
  */
 
-export type LedgerKind = "grant" | "reserve" | "finalize" | "release" | "track";
+export type LedgerKind =
+  | "grant"
+  | "reserve"
+  | "finalize"
+  | "release"
+  | "track"
+  | "expire"
+  | "clawback"
+  | "shortfall";
 
-export type ReservationStatus = "held" | "finalized" | "released";
+export type ReservationStatus = "held" | "finalized" | "released" | "expired";
 
 export interface Executor {
   get<T>(sql: string, params?: readonly unknown[]): Promise<T | undefined>;
@@ -36,8 +44,10 @@ export type LedgerEntry = {
   idempotencyKey: string | null;
   stripeEventId: string | null;
   checkoutSessionId: string | null;
+  paymentIntentId: string | null;
   packId: string | null;
   note: string | null;
+  livemode: boolean | null;
   createdAt: string;
   seq: number;
 };
@@ -50,6 +60,8 @@ export type GrantInput = {
   idempotencyKey: string;
   stripeEventId?: string | null;
   checkoutSessionId?: string | null;
+  paymentIntentId?: string | null;
+  livemode?: boolean | null;
   note?: string | null;
 };
 
@@ -63,13 +75,27 @@ export type ReserveSuccess = {
   ok: true;
   replay: boolean;
   reservationId: string;
-  status: ReservationStatus;
+  /** Only an open hold. A finished reservation is never ok. */
+  status: "held";
+  balance: number;
+};
+
+export type ReserveFailure = {
+  ok: false;
+  error:
+    | "insufficient_credits"
+    | "already_released"
+    | "already_finalized"
+    | "hold_expired"
+    | "idempotency_amount_mismatch"
+    | "idempotency_key_reused"
+    | "account_paused";
   balance: number;
 };
 
 export type MutationFailure = {
   ok: false;
-  error: "reservation_not_found" | "already_released" | "already_finalized";
+  error: "reservation_not_found" | "already_released" | "already_finalized" | "hold_expired";
   balance: number;
 };
 

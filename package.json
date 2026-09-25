@@ -1,6 +1,6 @@
 {
   "name": "stripe-credit-ledger-kit",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "Cloneable Stripe credit-ledger kit for indie AI SaaS. Your Stripe, your database, real-time hard gate.",
   "scripts": {

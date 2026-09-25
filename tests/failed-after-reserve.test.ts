@@ -39,7 +39,7 @@ describe("failed call after reserve", () => {
     expect(entries.find((entry) => entry.kind === "reserve")?.status).toBe("released");
     expect(entries.reduce((sum, entry) => sum + entry.delta, 0)).toBe(100);
 
-    const secondRelease = await release(ctx.db, "call_fail");
+    const secondRelease = await release(ctx.db, "user_1", "call_fail");
     expect(secondRelease.ok).toBe(true);
     if (secondRelease.ok) expect(secondRelease.replay).toBe(true);
     expect(await getBalance(ctx.db, "user_1")).toBe(100);
@@ -54,12 +54,12 @@ describe("failed call after reserve", () => {
     expect(succeeded.output).toContain("No model was called");
     expect(await getBalance(ctx.db, "user_1")).toBe(60);
 
-    const finalizeReplay = await finalize(ctx.db, "call_ok");
+    const finalizeReplay = await finalize(ctx.db, "user_1", "call_ok");
     expect(finalizeReplay.ok).toBe(true);
     if (finalizeReplay.ok) expect(finalizeReplay.replay).toBe(true);
     expect(await getBalance(ctx.db, "user_1")).toBe(60);
 
-    const blockedRelease = await release(ctx.db, "call_ok");
+    const blockedRelease = await release(ctx.db, "user_1", "call_ok");
     expect(blockedRelease.ok).toBe(false);
     if (!blockedRelease.ok) expect(blockedRelease.error).toBe("already_finalized");
     expect(await getBalance(ctx.db, "user_1")).toBe(60);
@@ -86,7 +86,7 @@ describe("failed call after reserve", () => {
     expect(later.ok).toBe(true);
     if (later.ok) expect(later.replay).toBe(false);
     expect(await getBalance(ctx.db, "user_1")).toBe(5);
-    await release(ctx.db, "retry_me");
+    await release(ctx.db, "user_1", "retry_me");
     expect(await getBalance(ctx.db, "user_1")).toBe(15);
   });
 
