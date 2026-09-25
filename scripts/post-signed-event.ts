@@ -54,20 +54,27 @@ const event = {
   },
 };
 
-const payload = JSON.stringify(event);
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_signature_only");
-const signature = stripe.webhooks.generateTestHeaderString({ payload, secret });
+async function main(): Promise<void> {
+  const payload = JSON.stringify(event);
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_signature_only");
+  const signature = stripe.webhooks.generateTestHeaderString({ payload, secret });
 
-const response = await fetch(`${base}/api/webhooks/stripe`, {
-  method: "POST",
-  headers: {
-    "content-type": "application/json",
-    "stripe-signature": signature,
-  },
-  body: payload,
+  const response = await fetch(`${base}/api/webhooks/stripe`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "stripe-signature": signature,
+    },
+    body: payload,
+  });
+
+  const text = await response.text();
+  console.log(`${replay ? "replay" : "deliver"} ${eventId}`);
+  console.log(response.status, text);
+  if (!response.ok) process.exit(1);
+}
+
+main().catch((error: unknown) => {
+  console.error(error);
+  process.exit(1);
 });
-
-const text = await response.text();
-console.log(`${replay ? "replay" : "deliver"} ${eventId}`);
-console.log(response.status, text);
-if (!response.ok) process.exit(1);
