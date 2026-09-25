@@ -115,8 +115,8 @@ See `.env.example`.
 | `DATABASE_URL` | Production | `postgres://` or `postgresql://`. Wins over SQLite when set. |
 | `SQLITE_PATH` | Dev alternate | File path. Ignored when `DATABASE_URL` is Postgres. |
 | `DEMO_USER_ID` | Demo | Balance owner for the shell. Default `demo_user`. |
-| `ALLOW_DEMO_CONTROLS` | Demo | Default **false**. `true` seeds 100 credits and enables spend, race, reset, checkout, check, and track. The shell is not production. |
-| `LEDGER_API_SECRET` | Optional | When the demo flag is off, `POST /api/checkout`, `/api/credits/check`, and `/api/credits/track` accept header `x-ledger-secret` equal to this value. Leave unset unless you are calling the shell from your own server. |
+| `ALLOW_DEMO_CONTROLS` | Demo | Default **false**. `true` seeds 100 credits and enables spend, race, reset, checkout, check, and track. Ignored when `NODE_ENV=production`. The shell is not production. |
+| `LEDGER_API_SECRET` | Optional | When the demo flag is off, `POST /api/checkout`, `/api/credits/check`, and `/api/credits/track` accept header `x-ledger-secret`. It does not select a customer. Those routes still bill `DEMO_USER_ID`. Leave unset. |
 | `CREDIT_HOLD_TTL_SECONDS` | Optional | How long a hold stays `held` before the reaper returns the credits. Default `900` (15 minutes). |
 | `CREDIT_HOLD_REAP_INTERVAL_SECONDS` | Optional | Sleep between passes of `npm run holds:reap`. Default `60`. |
 | `STRIPE_EXPECT_LIVEMODE` | Optional | `true` or `false` overrides the key prefix. Unset: `sk_live_` expects live events; every other key expects test events. |
@@ -283,6 +283,15 @@ Routes in this repo attribute every call to `DEMO_USER_ID`, and only when `ALLOW
 | Two spends of the last credit | One `UPDATE ... WHERE balance >= ?` wins. |
 
 Stripe retries non-2xx responses for days. Return 500 only when a retry could succeed (database blip, bug you are about to fix). Signature failures stay 400 so Stripe stops.
+
+## Known limits
+
+- `NODE_ENV=production` forces the demo shell closed, including seed, spend, race, reset, and the demo flag. Do not deploy `src/app` as your product.
+- `x-ledger-secret` opens checkout, check, and track only. It still uses `DEMO_USER_ID`. Copy `src/billing` and pass the user id from your session.
+- A refund that arrives before its grant is ignored and will not claw back the later grant.
+- Partial refunds claw back the whole pack. A won dispute does not return credits.
+- Reserve replay matches user, key, and amount. There is no payload hash.
+- The balance column is the spendable number. The journal explains it. It is not an event-sourced ledger.
 
 ## SQLite instead of Postgres
 

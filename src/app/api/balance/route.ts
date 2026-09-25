@@ -1,11 +1,21 @@
 import { PACKS, getAccount, listEntries } from "@/billing";
-import { demoControlsEnabled, demoUserId, getDb, ready } from "@/server/ledger";
+import { demoControlsEnabled, demoUserId, getDb, ready, shellApiAllowed } from "@/server/ledger";
 import { errorResponse } from "@/server/http";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(): Promise<Response> {
+export async function GET(req: Request): Promise<Response> {
+  if (!shellApiAllowed(req)) {
+    return Response.json({
+      userId: null,
+      balance: 0,
+      paused: false,
+      demoControls: false,
+      packs: PACKS,
+      entries: [],
+    });
+  }
   try {
     await ready();
     const userId = demoUserId();
