@@ -153,6 +153,18 @@ async function balanceOf(tx: Executor, userId: string): Promise<number> {
   return asInt(row.balance);
 }
 
+/** Credit the spendable balance. Refuses a sum that cannot round-trip through JS. */
+async function creditBalance(tx: Executor, userId: string, amount: number): Promise<void> {
+  assertPositiveInt(amount);
+  const current = await balanceOf(tx, userId);
+  if (amount > Number.MAX_SAFE_INTEGER - current) throw new LedgerError("unsafe_integer");
+  await tx.run(`UPDATE credit_balances SET balance = balance + ?, updated_at = ? WHERE user_id = ?`, [
+    amount,
+    isoNow(),
+    userId,
+  ]);
+}
+
 async function lockBalanceRow(tx: Executor, userId: string): Promise<{ balance: number; paused: boolean }> {
   await tx.run(
     `INSERT INTO credit_balances (user_id, balance, updated_at)
@@ -273,12 +285,7 @@ export async function applyGrant(tx: Executor, input: GrantInput): Promise<{ bal
   if (await grantReplay(tx, input)) {
     return { balance: await balanceOf(tx, input.userId), replay: true };
   }
-  await tx.run(
-    `UPDATE credit_balances
-     SET balance = balance + ?, updated_at = ?
-     WHERE user_id = ?`,
-    [input.credits, isoNow(), input.userId],
-  );
+  await creditBalance(tx, input.userId, input.credits);
   await insertEntry(tx, {
     userId: input.userId,
     delta: input.credits,
@@ -329,10 +336,7 @@ async function releaseHeldForClawback(tx: Executor, userId: string): Promise<num
     if (!claimed) continue;
     const amount = -asInt(hold.delta);
     if (amount <= 0) throw new LedgerError("invalid_reservation_delta");
-    await tx.run(
-      `UPDATE credit_balances SET balance = balance + ?, updated_at = ? WHERE user_id = ?`,
-      [amount, isoNow(), userId],
-    );
+    await creditBalance(tx, userId, amount);
     await insertEntry(tx, {
       userId,
       delta: amount,
@@ -415,12 +419,14 @@ export async function applyClawback(tx: Executor, input: ClawbackInput): Promise
     );
     if (!updated) throw new LedgerError("clawback_race");
   }
+  // idempotency_key stays NULL. The payment intent is the clawback identity.
+  // A customer key equal to the Stripe event id must not roll the refund back.
   await insertEntry(tx, {
     userId: input.userId,
     delta: -clawedBack,
     kind: "clawback",
     status: null,
-    idempotencyKey: input.stripeEventId,
+    idempotencyKey: null,
     stripeEventId: input.stripeEventId,
     checkoutSessionId: null,
     paymentIntentId: input.paymentIntentId,
@@ -434,7 +440,7 @@ export async function applyClawback(tx: Executor, input: ClawbackInput): Promise
       delta: 0,
       kind: "shortfall",
       status: null,
-      idempotencyKey: `${input.stripeEventId}:shortfall`,
+      idempotencyKey: null,
       stripeEventId: null,
       checkoutSessionId: null,
       paymentIntentId: null,
@@ -650,10 +656,7 @@ async function settle(
   if (target === "released") {
     const amount = -asInt(current.delta);
     if (amount <= 0) throw new LedgerError("invalid_reservation_delta");
-    await tx.run(
-      `UPDATE credit_balances SET balance = balance + ?, updated_at = ? WHERE user_id = ?`,
-      [amount, isoNow(), userId],
-    );
+    await creditBalance(tx, userId, amount);
   }
 
   await insertEntry(tx, {
@@ -834,16 +837,13 @@ async function expireOne(tx: Executor, reservationId: string, cutoff: string): P
     [current.id],
   );
   if (!claimed) return false;
-  await tx.run(
-    `UPDATE credit_balances SET balance = balance + ?, updated_at = ? WHERE user_id = ?`,
-    [amount, isoNow(), current.user_id],
-  );
+  await creditBalance(tx, current.user_id, amount);
   await insertEntry(tx, {
     userId: current.user_id,
     delta: amount,
     kind: "expire",
     status: "expired",
-    idempotencyKey: `expire:${current.id}`,
+    idempotencyKey: null,
     stripeEventId: null,
     checkoutSessionId: null,
     paymentIntentId: null,
