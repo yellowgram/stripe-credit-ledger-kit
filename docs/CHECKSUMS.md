@@ -24,6 +24,12 @@ Recomputed from the GitHub Release asset. It matches that digest.
 |---|---|
 | Asset | `stripe-credit-ledger-kit-0.1.1.zip` |
 | Tag | `v0.1.1` |
-| SHA-256 | Published in the GitHub Release notes for `v0.1.1` (same line the maintainer pastes beside the Polar file). |
+| SHA-256 | `491885f71fe36ca8b224c6c34e339a7cef24c72e817e9262a031a4723b5dc8c7` |
 
-The asset is `git archive` of tag `v0.1.1` with prefix `stripe-credit-ledger-kit-0.1.1/`. It omits `node_modules`, secret env files (`.env`, `.env.local`), SQLite databases, and `.git`. It includes `.env.example`. The omitted paths are untracked or gitignored, so the archive leaves them out. `.env.example` is tracked and is included.
+This digest is the GitHub Release asset for tag `v0.1.1`, and the same line is in those Release notes. The copy of this file inside that zip does not contain this hex line. It points at the Release notes, because a digest stored in the packed bytes would not match the zip. Verify the downloaded file:
+
+```bash
+sha256sum stripe-credit-ledger-kit-0.1.1.zip
+```
+
+The asset is `git archive` of tag `v0.1.1` with prefix `stripe-credit-ledger-kit-0.1.1/`. It omits `node_modules`, secret env files (`.env`, `.env.local`), SQLite databases, and `.git`. It includes `.env.example`. The omitted paths are untracked or gitignored, so the archive leaves them out. `.env.example` is tracked and is included. The maintainer pastes this same digest into the Polar delivery note.

@@ -81,7 +81,7 @@ One organization. Use and modify the kit for that organization’s own products.
 
 ## CoS notes (do not paste into the public listing)
 
-- Attach `stripe-credit-ledger-kit-0.1.1.zip` from GitHub Release **v0.1.1** as the Polar file. The repository is private, so the release asset URL is not a public download link. Paste the Release-notes SHA-256 into the Polar delivery note. `docs/CHECKSUMS.md` records the same digest on the default branch after the asset is packed; the copy inside the zip points at the Release notes.
+- Attach `stripe-credit-ledger-kit-0.1.1.zip` from GitHub Release **v0.1.1** as the Polar file. The repository is private, so the release asset URL is not a public download link. Paste this SHA-256 into the Polar delivery note: `491885f71fe36ca8b224c6c34e339a7cef24c72e817e9262a031a4723b5dc8c7`. `docs/CHECKSUMS.md` on the default branch records the same digest. The copy of that file inside the zip points at the Release notes.
 - Set Polar’s refund toggle to **none**. The kit states no money-back window. A platform default that still offers a refund contradicts `docs/REFUND_GLOSSARY.md`.
 - **Issues access (you execute this):** after purchase, invite the buyer’s GitHub account as a collaborator with **Read** on `yellowgram/stripe-credit-ledger-kit` (open Issues, no push). An equivalent private mirror is allowed only if you actually read those Issues. Polar direct messages are not the 60-day queue. The kit documents this path in `SUPPORT.md`; it does not send the invite.
 - Enable GitHub private vulnerability reporting so `SECURITY.md`’s advisory form works. Buyers must not put zero-days in Issues.
