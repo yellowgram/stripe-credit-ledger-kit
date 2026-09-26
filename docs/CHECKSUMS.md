@@ -24,9 +24,9 @@ Recomputed from the GitHub Release asset. It matches that digest.
 |---|---|
 | Asset | `stripe-credit-ledger-kit-0.1.1.zip` |
 | Tag | `v0.1.1` |
-| SHA-256 | Published in the GitHub Release notes for `v0.1.1`. |
+| SHA-256 | `a9bc28d82f673afc0eafbd1c3ad20c3047e95c7eb71ad70dd96f4b88473d41a8` |
 
-The asset was rebuilt so the zip includes the commercial license lock. Ignore any earlier 0.1.1 digest. This copy of the file points at the Release notes, because a digest stored in the packed bytes would not match the zip. Verify the downloaded file:
+This digest is the GitHub Release asset for tag `v0.1.1` (commit `c633584`), also printed in those Release notes. It replaces any earlier 0.1.1 digest. The copy of this file inside that zip does not contain this hex line. It points at the Release notes, because a digest stored in the packed bytes would not match the zip. Verify the downloaded file:
 
 ```bash
 sha256sum stripe-credit-ledger-kit-0.1.1.zip
