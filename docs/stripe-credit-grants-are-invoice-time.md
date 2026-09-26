@@ -4,6 +4,7 @@
 **Status:** Public draft (marketing lead magnet for a DIY ledger kit)
 **Last updated:** 2026-09-25
 **Not affiliated with** Stripe, Autumn, or Metronome.
+**License:** This file only is MIT, Copyright (c) 2026 yellowgram. The kit is not MIT. See the repository `LICENSE`.
 
 If you are reading this inside the credit-ledger kit, the manual is the [README](../README.md). This chapter is the map, not the setup guide.
 

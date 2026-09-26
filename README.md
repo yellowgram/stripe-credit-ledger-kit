@@ -6,6 +6,8 @@ Buy a credit pack in Stripe Checkout → webhook grants a balance → `check` / 
 
 yellowgram sells the kit on Polar. Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
 
+Version **0.1.1** (same ledger behavior as 0.1.0). Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). Pin the Release zip and check [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Changes: [CHANGELOG.md](CHANGELOG.md).
+
 ## Use Autumn or Metronome instead when…
 
 Do not keep this ledger if a hosted product fits the job better.
@@ -18,6 +20,10 @@ Do not keep this ledger if a hosted product fits the job better.
 - **You wanted a full AI SaaS boilerplate** (chat, streaming, auth, product chrome). This repo will feel unfinished on purpose. Copy `src/billing` into the app you already have.
 
 Stay if you want owned Postgres (or SQLite) on your Stripe Checkout, a hard stop at zero, and tests for the edges above.
+
+## Not an API auth header
+
+`LEDGER_API_SECRET` / `x-ledger-secret` does not pick a customer. Checkout, check, and track still bill `DEMO_USER_ID` (default `demo_user`). That is one shared demo balance, not multi-tenant auth. A `userId` in the JSON body is ignored. Leave the secret unset. Copy `src/billing` and pass `userId` from your session. The same warning sits on [BUYER_START_HERE.md](BUYER_START_HERE.md), in [Environment](#environment), and under [Known limits](#known-limits).
 
 ## What you get
 
@@ -101,9 +107,11 @@ This fixture is local. It does not charge a card. Use Checkout when you want to 
 - **Last-credit race** — sets the balance to 10, fires two spends of 10. One succeeds, one is insufficient, balance ends at 0.
 - **Reset demo balance to 100** — demo only. These four controls exist only when `ALLOW_DEMO_CONTROLS=true`.
 
-`npm test` runs the same edges against SQLite files. It does not call Stripe. GitHub Actions also runs them against Postgres.
+`npm test` runs the same edges against SQLite files. It does not call Stripe. GitHub Actions runs the same suite on Node 20 and Node 22, on SQLite and on Postgres. Failures to check first: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ## Environment
+
+**`x-ledger-secret` still bills `DEMO_USER_ID`.** Matching `LEDGER_API_SECRET` opens checkout, check, and track only. It does not select a customer and it is not multi-tenant auth. Leave `LEDGER_API_SECRET` unset. Copy `src/billing` and pass `userId` from your session.
 
 See `.env.example`.
 
@@ -194,6 +202,8 @@ That is `scripts/reap-holds.ts`. `CREDIT_HOLD_REAP_INTERVAL_SECONDS` defaults to
 
 ## Refunds and disputes
 
+Two words: the kit purchase has **no money-back window**. Below is a **customer** Stripe refund or dispute. See [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
+
 `charge.refunded` and `charge.dispute.created` claw back the **full pack**, not a prorated cent amount. The payment intent is read from `payment_intent`, then from `charge.payment_intent`, then by a stored charge id or Checkout session id. One `clawback` row is written per payment intent.
 
 Open holds for that user are released in the **same** transaction, then the spendable balance is debited. A later reaper pass cannot put those credits back. If a hold was closed, or the balance cannot cover the grant, the user is paused. A shortfall is journaled (`kind = shortfall`, delta 0) only when credits are actually missing. `reserve` and `track` then return `account_paused`.
@@ -245,7 +255,7 @@ npm test
 | `tests/shell-gates.test.ts` | Checkout, check, and track are 404 when the demo flag is off. A matching `x-ledger-secret` or the demo flag opens them. |
 | `tests/postgres-concurrency.test.ts` | Skipped unless `DATABASE_URL` is Postgres. Two-process last-credit race and webhook replay on Postgres. |
 
-The race test spawns two processes so the decrement is not just serialized on one connection’s mutex. `npm test` needs no Postgres and no Stripe network. The GitHub Actions `postgres` job sets `DATABASE_URL` and runs the same suite, including the Postgres race. The gate stays `UPDATE … AND balance >= ?`. It does not require `SERIALIZABLE`.
+The race test spawns two processes so the decrement is not just serialized on one connection’s mutex. `npm test` needs no Postgres and no Stripe network. The GitHub Actions `postgres` job sets `DATABASE_URL` and runs the same suite, including the Postgres race, on Node 20 and Node 22. The gate stays `UPDATE … AND balance >= ?`. It does not require `SERIALIZABLE`.
 
 ## Copy the billing module
 
@@ -258,11 +268,13 @@ Delete the demo shell when it is no longer useful:
 - `src/app/api/demo/*`
 - `POST /api/credits/track` if you call `track` from your server instead
 
-The MIT extract is `src/billing/errors.ts`, `src/billing/types.ts`, and `src/billing/ledger.ts`, plus `src/billing/LICENSE.MIT`. You can drop that slice into another service and implement `Db` yourself. The adapters in `src/billing/db.ts`, Checkout, webhook, and catalog stay under the no-resale license in `LICENSE`.
+Only `src/billing/errors.ts`, `src/billing/types.ts`, and `src/billing/ledger.ts` are MIT, plus `src/billing/LICENSE.MIT`. You can drop that slice into another service and implement `Db` yourself. The adapters in `src/billing/db.ts`, Checkout, webhook, and catalog stay under the commercial kit license in `LICENSE`. They are not MIT.
 
 Routes in this repo attribute every call to `DEMO_USER_ID`, and only when `ALLOW_DEMO_CONTROLS=true` (or `x-ledger-secret` matches `LEDGER_API_SECRET` for checkout, check, and track). When you copy `src/billing`, the Checkout `userId` must come from your session. Never pass `DEMO_USER_ID` or any other env default as the customer. Ignore any `userId` in the JSON body.
 
 ## Failure modes
+
+Short runbook for the cases below: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 | What happened | What the kit does |
 |---|---|
@@ -287,7 +299,7 @@ Stripe retries non-2xx responses for days. Return 500 only when a retry could su
 ## Known limits
 
 - `NODE_ENV=production` forces the demo shell closed, including seed, spend, race, reset, and the demo flag. Do not deploy `src/app` as your product.
-- `x-ledger-secret` opens checkout, check, and track only. It still uses `DEMO_USER_ID`. Copy `src/billing` and pass the user id from your session.
+- `x-ledger-secret` is not multi-tenant auth. It opens checkout, check, and track only, and it still uses `DEMO_USER_ID`. Copy `src/billing` and pass the user id from your session. Never take `userId` from the JSON body.
 - A refund that arrives before its grant is ignored and will not claw back the later grant.
 - Partial refunds claw back the whole pack. A won dispute does not return credits.
 - Reserve replay matches user, key, and amount. There is no payload hash.
@@ -308,20 +320,22 @@ src/demo/        fake LLM and demo reset — not a product
 src/server/      process-wide DB handle and demo user id
 tests/           edge cases
 scripts/         migrate, signed webhook fixture, hold reaper loop
-docs/            free chapter (invoice-time grants vs this ledger)
+docs/            free chapter, listing paste, troubleshooting, refund glossary, checksums
 ```
 
 ## License
 
-Single organization. Use and modify it for your own products. **No resale** and no republishing this kit as a competing starter, boilerplate, template, or course. See `LICENSE`.
+Commercial kit license. The kit is **not** MIT. You may use and modify it in a commercial product. No revenue royalty. **No resale** and no republishing this kit, or a substantial portion of it, as a competing starter, boilerplate, template, theme, or course. See `LICENSE`.
 
-`src/billing/ledger.ts` (with `types.ts` and `errors.ts`) is also MIT so you can copy the gate without the kit license following it. See `src/billing/LICENSE.MIT`.
+Only `src/billing/ledger.ts`, `types.ts`, and `errors.ts` are MIT (`src/billing/LICENSE.MIT`). The free chapter is MIT for that file alone. The reserve / finalize / release example in this README may be copied into your application. That does not make the README MIT.
 
 No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome.
 
 ## Support
 
 GitHub Issues for **60 days** from the purchase date. Best-effort, no SLA, capped at about two hours a week. Include the failing test name or a Stripe **test-mode** event id. Do not paste live secret keys, webhook signing secrets, or customer payment details.
+
+Full boundary, the private-repo collaborator path, and the out-of-scope reply: [SUPPORT.md](SUPPORT.md). Vulnerability reports: [SECURITY.md](SECURITY.md). Purchase refund versus customer clawback: [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
 
 ## Free chapter
 

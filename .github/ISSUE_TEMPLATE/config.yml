@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Support boundary
+    url: https://github.com/yellowgram/stripe-credit-ledger-kit/blob/main/SUPPORT.md
+    about: 60-day Issues, no SLA, repro required. Polar messages are not the queue.
+  - name: Troubleshooting
+    url: https://github.com/yellowgram/stripe-credit-ledger-kit/blob/main/docs/TROUBLESHOOTING.md
+    about: Webhook secret, success page, demo flag, DEMO_USER_ID, SQLite locks, holds, clawback, pause.
+  - name: Security
+    url: https://github.com/yellowgram/stripe-credit-ledger-kit/blob/main/SECURITY.md
+    about: Private vulnerability reports only. No zero-days in Issues.
