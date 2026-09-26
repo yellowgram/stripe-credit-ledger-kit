@@ -16,7 +16,7 @@ Cloneable credit ledger for indie AI SaaS. Your Stripe. Your database. A real-ti
 
 ## What you get
 
-- **Billing module** (`src/billing`). Pack catalog (100 / 500 / 2,000), Stripe Checkout metadata (`userId`, `credits`, `packId`; `credits` is not the grant authority), signature-checked idempotent webhooks, and `check` / `reserve` / `finalize` / `release` / `track`. Postgres and SQLite adapters. Copy this folder into your app. `ledger.ts`, `types.ts`, and `errors.ts` are also MIT (`src/billing/LICENSE.MIT`).
+- **Billing module** (`src/billing`). Pack catalog (100 / 500 / 2,000), Stripe Checkout metadata (`userId`, `credits`, `packId`; `credits` is not the grant authority), signature-checked idempotent webhooks, and `check` / `reserve` / `finalize` / `release` / `track`. Postgres and SQLite adapters. Copy this folder into your app. The folder is not MIT. Only `ledger.ts`, `types.ts`, and `errors.ts` are MIT (`src/billing/LICENSE.MIT`).
 - **Demo shell** (`src/app`, `src/demo`). Balance page plus spend, race, and reset so you can watch the edges. Replace it. `NODE_ENV=production` forces the shell closed.
 - **Tests** (`tests/`). Webhook idempotency, out-of-order events, last-credit races, provider failure after reserve, refund and dispute clawback, shell gates. `npm test` needs no Stripe network.
 - **Free honesty chapter** (`docs/stripe-credit-grants-are-invoice-time.md`). When to use Stripe Credit Grants, this ledger, Metronome, or Autumn. It ships in the zip and stays public. Do not paywall it.
@@ -75,13 +75,13 @@ The kit states no money-back window for this $79 purchase. “Refunds” in the 
 
 ## License
 
-One organization. Use and modify the kit for that organization’s own products. No resale, redistribution, sublicensing, or republishing the kit (or a substantial portion of it) as a competing starter, boilerplate, template, theme, or course. No hosted service whose purpose is to hand third parties this kit. No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome. Full text: `LICENSE`.
+Commercial kit license. The kit is not MIT. You may use and modify it in a commercial product. yellowgram takes no revenue royalty. You may not redistribute, resell, or republish the kit (or a substantial portion of it) as a competing starter, boilerplate, template, theme, or course, and you may not offer a download whose purpose is to give third parties this kit. MIT is only `src/billing/ledger.ts`, `types.ts`, and `errors.ts`, plus the free chapter `docs/stripe-credit-grants-are-invoice-time.md` (that file alone). No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome. Full text: `LICENSE`.
 
 ---
 
 ## CoS notes (do not paste into the public listing)
 
-- Attach `stripe-credit-ledger-kit-0.1.1.zip` from GitHub Release **v0.1.1** as the Polar file. The repository is private, so the release asset URL is not a public download link. Paste this SHA-256 into the Polar delivery note: `491885f71fe36ca8b224c6c34e339a7cef24c72e817e9262a031a4723b5dc8c7`. `docs/CHECKSUMS.md` on the default branch records the same digest. The copy of that file inside the zip points at the Release notes.
+- Attach `stripe-credit-ledger-kit-0.1.1.zip` from GitHub Release **v0.1.1** as the Polar file. The repository is private, so the release asset URL is not a public download link. Paste the SHA-256 from the Release notes into the Polar delivery note. `docs/CHECKSUMS.md` on the default branch records the same digest after the asset is packed. The copy of that file inside the zip points at the Release notes. Do not reuse a digest from a zip built before the commercial license lock.
 - Set Polar’s refund toggle to **none**. The kit states no money-back window. A platform default that still offers a refund contradicts `docs/REFUND_GLOSSARY.md`.
 - **Issues access (you execute this):** after purchase, invite the buyer’s GitHub account as a collaborator with **Read** on `yellowgram/stripe-credit-ledger-kit` (open Issues, no push). An equivalent private mirror is allowed only if you actually read those Issues. Polar direct messages are not the 60-day queue. The kit documents this path in `SUPPORT.md`; it does not send the invite.
 - Enable GitHub private vulnerability reporting so `SECURITY.md`’s advisory form works. Buyers must not put zero-days in Issues.

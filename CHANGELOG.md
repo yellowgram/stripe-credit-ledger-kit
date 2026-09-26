@@ -14,6 +14,7 @@ Hygiene only. Ledger behavior is the 0.1.0 baseline below. No env renames. No we
 - Issue form requires a repro pack. Missing repro is closed after 7 days.
 - Expected Issues path for the private repo: post-purchase collaborator invite with Read. Documented in `SUPPORT.md`. The maintainer sends the invite.
 - GitHub Actions runs Node **20** and **22** on both the SQLite job and the Postgres job. `engines.node` stays `>=20`.
+- Commercial kit license, not MIT. Use and modify the kit in a commercial product. No revenue royalty. No redistributing the kit as a starter, boilerplate, template, theme, or course. MIT stays scoped to `src/billing/ledger.ts`, `types.ts`, and `errors.ts`. The free chapter is MIT for that file only. The README reserve/finalize/release example may be copied into an application and does not MIT the README.
 
 ## 0.1.0 — 2026-09-26
 

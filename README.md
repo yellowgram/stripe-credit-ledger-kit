@@ -268,7 +268,7 @@ Delete the demo shell when it is no longer useful:
 - `src/app/api/demo/*`
 - `POST /api/credits/track` if you call `track` from your server instead
 
-The MIT extract is `src/billing/errors.ts`, `src/billing/types.ts`, and `src/billing/ledger.ts`, plus `src/billing/LICENSE.MIT`. You can drop that slice into another service and implement `Db` yourself. The adapters in `src/billing/db.ts`, Checkout, webhook, and catalog stay under the no-resale license in `LICENSE`.
+Only `src/billing/errors.ts`, `src/billing/types.ts`, and `src/billing/ledger.ts` are MIT, plus `src/billing/LICENSE.MIT`. You can drop that slice into another service and implement `Db` yourself. The adapters in `src/billing/db.ts`, Checkout, webhook, and catalog stay under the commercial kit license in `LICENSE`. They are not MIT.
 
 Routes in this repo attribute every call to `DEMO_USER_ID`, and only when `ALLOW_DEMO_CONTROLS=true` (or `x-ledger-secret` matches `LEDGER_API_SECRET` for checkout, check, and track). When you copy `src/billing`, the Checkout `userId` must come from your session. Never pass `DEMO_USER_ID` or any other env default as the customer. Ignore any `userId` in the JSON body.
 
@@ -325,9 +325,9 @@ docs/            free chapter, listing paste, troubleshooting, refund glossary, 
 
 ## License
 
-Single organization. Use and modify it for your own products. **No resale** and no republishing this kit as a competing starter, boilerplate, template, or course. See `LICENSE`.
+Commercial kit license. The kit is **not** MIT. You may use and modify it in a commercial product. No revenue royalty. **No resale** and no republishing this kit, or a substantial portion of it, as a competing starter, boilerplate, template, theme, or course. See `LICENSE`.
 
-`src/billing/ledger.ts` (with `types.ts` and `errors.ts`) is also MIT so you can copy the gate without the kit license following it. See `src/billing/LICENSE.MIT`.
+Only `src/billing/ledger.ts`, `types.ts`, and `errors.ts` are MIT (`src/billing/LICENSE.MIT`). The free chapter is MIT for that file alone. The reserve / finalize / release example in this README may be copied into your application. That does not make the README MIT.
 
 No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome.
 

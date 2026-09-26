@@ -2,6 +2,8 @@
 
 Kit **0.1.1**. Polar delivered this zip. Polar is not in the app. Verify the file with [docs/CHECKSUMS.md](docs/CHECKSUMS.md).
 
+License: commercial, not MIT. Use and modify it in your product. No royalty. Do not resell or republish the kit as a starter, boilerplate, template, theme, or course. MIT only for `src/billing/ledger.ts`, `types.ts`, `errors.ts`, and the free chapter. [LICENSE](LICENSE).
+
 ## Not multi-tenant auth
 
 `x-ledger-secret` / `LEDGER_API_SECRET` is not customer auth. It only opens demo checkout, check, and track, and those routes still bill `DEMO_USER_ID` (default `demo_user`). Every caller shares one balance. A `userId` in the JSON body is ignored. Leave `LEDGER_API_SECRET` unset.

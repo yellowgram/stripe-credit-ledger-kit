@@ -1,23 +1,28 @@
-Commercial license — stripe-credit-ledger-kit
+Commercial kit license — stripe-credit-ledger-kit
 
 Copyright (c) 2026 yellowgram
 
-Permission is granted to use, modify, and ship this kit inside one organization
-(single-seat / single-org) for that organization's own products and services.
+The kit is not MIT. yellowgram distributes it as a private repository and a Polar zip. That channel is not a public MIT grant.
 
-You may not resell, redistribute, sublicense, or republish this kit — or a
-substantial portion of it — as a competing starter kit, boilerplate, template,
-theme, or course asset. You may not offer a hosted service whose purpose is to
-give third parties this kit.
+You may use and modify this kit in a commercial product. yellowgram takes no revenue royalty on that product.
 
-Exception — MIT extract. The files listed below are also licensed under the MIT
-License (see src/billing/LICENSE.MIT). You may copy that slice into an application
-without the no-resale terms following it. The rest of this repository stays under
-the terms above.
+You may not redistribute, resell, sublicense, or republish this kit — or a substantial portion of it — as a competing starter, boilerplate, template, theme, or course. You may not offer a download or hosted library whose purpose is to give third parties this kit. You may not relicense the non-MIT files as MIT. Shipping the kit inside a product you sell is the use grant above. Handing out the kit as a starter is not.
+
+The short reserve / finalize / release example in README.md may be copied into your application. That permission is not an MIT grant for the README or for the kit.
+
+MIT applies only to the files named below. It does not apply to the rest of this tree, including Checkout, webhooks, database adapters, the demo shell, tests, and this license. The no-redistribution terms above do not apply to those MIT files.
+
+Code extract (see src/billing/LICENSE.MIT):
 
   - src/billing/errors.ts
   - src/billing/types.ts
   - src/billing/ledger.ts
+
+Free chapter, this file only:
+
+  - docs/stripe-credit-grants-are-invoice-time.md
+
+Permission is granted, free of charge, to deal in that chapter alone, including publishing, distributing, and selling copies of it, if the line "Copyright (c) 2026 yellowgram" stays with the chapter. The chapter is provided as is, without warranty. Sharing it does not license the kit.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. YOU ARE
 RESPONSIBLE FOR BILLING CORRECTNESS IN PRODUCTION. THIS KIT DOES NOT PROVIDE
