@@ -201,7 +201,7 @@ describe("accepted review fixes", () => {
       },
       testEnv,
     );
-    expect(first).toMatchObject({ granted: false, reason: "ignored_unknown_payment_intent" });
+    expect(first).toMatchObject({ granted: false, reason: "pending_clawback" });
     const count = await ctx.db.get<{ n: number }>(`SELECT COUNT(*) AS n FROM stripe_events`);
     expect(Number(count?.n)).toBe(1);
     const second = await handleStripeEvent(
@@ -239,7 +239,7 @@ describe("accepted review fixes", () => {
       },
       testEnv,
     );
-    expect(refund).toMatchObject({ reason: "clawed_back", paused: true });
+    expect(refund).toMatchObject({ reason: "clawed_back", paused: false });
     expect(await getBalance(ctx.db, "user_1")).toBe(0);
     expect(await listHeldReservations(ctx.db, "user_1")).toEqual([]);
 
@@ -247,7 +247,7 @@ describe("accepted review fixes", () => {
     expect(reaped.expired).toBe(0);
     expect(await getBalance(ctx.db, "user_1")).toBe(0);
     expect(await listHeldReservations(ctx.db, "user_1")).toEqual([]);
-    expect((await getAccount(ctx.db, "user_1")).paused).toBe(true);
+    expect((await getAccount(ctx.db, "user_1")).paused).toBe(false);
     const breakdown = await balanceBreakdown(ctx.db, "user_1");
     expect(breakdown.heldReserves).toBe(0);
     expect(breakdown.balance).toBe(0);

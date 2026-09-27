@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createPostgresDb, isPostgresUrl } from "../src/billing/db";
-import { getBalance, grantCredits } from "../src/billing/ledger";
-import { ensureSchema } from "../src/billing/schema";
+import { getBalance, grantCredits, reserve } from "../src/billing/ledger";
+import { ensureSchema, migrate } from "../src/billing/schema";
 import type { Db } from "../src/billing/types";
 import { handleStripeEvent } from "../src/billing/webhook";
 import { checkoutEvent, runChild } from "./helpers";
@@ -80,5 +80,37 @@ suite("postgres concurrency", () => {
     await db.run(`DELETE FROM credit_ledger_entries WHERE user_id = ?`, [userId]);
     await db.run(`DELETE FROM credit_balances WHERE user_id = ?`, [userId]);
     await db.run(`DELETE FROM stripe_events WHERE id = ?`, [eventId]);
+  });
+
+  it("rejects a NULL idempotency key and does not double-expire a hold", async () => {
+    expect(await migrate(db)).toEqual([]);
+    const userId = `pg_${randomUUID()}`;
+    await expect(
+      db.run(
+        `INSERT INTO credit_ledger_entries
+          (id, user_id, delta, kind, idempotency_key, created_at, seq)
+         VALUES (?, ?, 1, 'grant', NULL, '2020-01-01T00:00:00.000Z', 1)`,
+        [`null_${userId}`, userId],
+      ),
+    ).rejects.toThrow(/null_idempotency_key/);
+
+    await grantCredits(db, {
+      userId,
+      credits: 30,
+      packId: "pack_100",
+      idempotencyKey: `grant_${userId}`,
+    });
+    const held = await reserve(db, { userId, amount: 10, idempotencyKey: `${userId}_hold` });
+    expect(held.ok).toBe(true);
+    const worker = path.resolve("tests/workers/reap-once.ts");
+    const now = new Date(Date.now() + 60_000).toISOString();
+    const [left, right] = await Promise.all([
+      runChild<{ expired: number }>(worker, { databaseUrl, now, ttlSeconds: 1 }),
+      runChild<{ expired: number }>(worker, { databaseUrl, now, ttlSeconds: 1 }),
+    ]);
+    expect(left.expired + right.expired).toBe(1);
+    expect(await getBalance(db, userId)).toBe(30);
+    await db.run(`DELETE FROM credit_ledger_entries WHERE user_id = ?`, [userId]);
+    await db.run(`DELETE FROM credit_balances WHERE user_id = ?`, [userId]);
   });
 });

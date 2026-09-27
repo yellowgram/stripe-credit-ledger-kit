@@ -13,14 +13,16 @@ export type {
 } from "./types";
 export { PACKS, creditPackMetadata, getPack } from "./packs";
 export type { CreditPack } from "./packs";
-export { ensureSchema } from "./schema";
+export { appliedMigrations, ensureSchema, migrate } from "./schema";
 export {
   createDbFromEnv,
   createPostgresDb,
   createSqliteDb,
+  databaseDialect,
   isPostgresUrl,
   toPostgresParams,
 } from "./db";
+export type { SqlDialect } from "./db";
 export {
   DEFAULT_HOLD_TTL_SECONDS,
   applyClawback,
@@ -35,6 +37,7 @@ export {
   listEntries,
   listHeldReservations,
   reapExpiredHolds,
+  recordPendingClawback,
   release,
   reserve,
   seedDemoUser,

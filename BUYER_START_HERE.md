@@ -1,6 +1,6 @@
 # Buyer start here
 
-Kit **0.1.2**. Polar delivers `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). Same ledger behavior as 0.1.0 and 0.1.1. Polar is not in the app. Verify that zip in [docs/CHECKSUMS.md](docs/CHECKSUMS.md). `v0.1.0` and `v0.1.1` are grandfathered history. They are not the file Polar sells now.
+Source version **0.2.0** (`package.json`). Polar still delivers `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). That zip is not resealed. Polar is not in the app. Verify that zip in [docs/CHECKSUMS.md](docs/CHECKSUMS.md). `v0.1.0` and `v0.1.1` are grandfathered history. They are not the file Polar sells now.
 
 License: source-available under PolyForm Noncommercial 1.0.0. OSI open source = false. The public license is not MIT. Commercial production use needs a **Suthirth Commercial Grant** from Suthirth solutions for **Credit Ledger** (Stripe credit ledger kit): one organization, perpetual for the named tag you purchased. Current SKU: **$79 once**. No money-back window. Soft-WTP stays off. No resale. Copyright (c) 2026 yellowgram. [LICENSE](LICENSE) · [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Contact: hello@yellowgram.dev.
 
@@ -38,7 +38,7 @@ Ship on Postgres, not a shared SQLite file: `docker compose up -d`, set `DATABAS
 
 Hard gate not required, or you want hosted `check` / `track`, plans, entitlements, rollovers, or Connect: [Use Autumn or Metronome instead](README.md#use-autumn-or-metronome-instead-when) and the [free chapter](docs/stripe-credit-grants-are-invoice-time.md). Do not open an Issue to turn this kit into that product.
 
-[Known limits](README.md#known-limits): refund-before-grant is not applied later; a partial refund claws the whole pack; a won dispute does not return credits.
+[Known limits](README.md#known-limits): a refund before its grant is applied when the grant arrives; a partial refund claws the whole pack; a won dispute does not return credits.
 
 ## Graduation — you own the process
 
@@ -46,8 +46,8 @@ Copy `src/billing` into your app. `userId` comes from your session. Do not ship 
 
 Production babysitting is yours, not a hosted loop:
 
-- Run `npm run holds:reap` (default 60s loop, or cron `npm run holds:reap -- --once`). You own that process. The demo server reaps once on the first database request, and `reserve` reaps before each reservation. Neither is the loop. Default TTL is 900s. One pass expires at most 200 holds. A crash after `reserve`, with nothing calling the reaper, leaves credits `held`. See [troubleshooting](docs/TROUBLESHOOTING.md).
-- A clawback pauses the user if it released an open hold, or if the balance could not cover the pack (`shortfall` is journaled only in that second case). A new grant does not unpause. Call `unpauseUser` from your admin path. Demo reset is not that path.
+- Run `npm run holds:reap` (default 60s loop, or cron `npm run holds:reap -- --once`). Production must run that process. You own it. The demo server reaps once on the first database request, and `reserve` reaps before each reservation. Neither is the production reaper. Default TTL is 900s. One pass expires at most 200 holds. A crash after `reserve`, with nothing calling the reaper, leaves credits `held`. See [troubleshooting](docs/TROUBLESHOOTING.md).
+- A clawback pauses the user only when the balance cannot cover the pack after open holds are released (`shortfall` is journaled only in that case). Releasing a hold does not pause by itself when the balance covers the pack. A new grant does not unpause. Call `unpauseUser` from your admin path. Demo reset is not that path.
 
 ## Support boundary
 

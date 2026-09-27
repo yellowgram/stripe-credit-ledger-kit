@@ -152,6 +152,22 @@ export function isPostgresUrl(value: string | undefined): value is string {
   return Boolean(value && /^postgres(ql)?:\/\//i.test(value));
 }
 
+export type SqlDialect = "sqlite" | "postgres";
+
+/**
+ * SQLite answers sqlite_version(). Postgres rejects that function.
+ * Call this outside an open transaction: a Postgres error aborts one.
+ */
+export async function databaseDialect(db: Db): Promise<SqlDialect> {
+  try {
+    const row = await db.get<{ v: string }>(`SELECT sqlite_version() AS v`);
+    if (row && typeof row.v === "string" && row.v.length > 0) return "sqlite";
+  } catch {
+    // Postgres has no sqlite_version(). Autocommit leaves the pool usable.
+  }
+  return "postgres";
+}
+
 /** Postgres when DATABASE_URL is a postgres URL; otherwise SQLite. */
 export function createDbFromEnv(env: NodeJS.ProcessEnv = process.env): Db {
   if (isPostgresUrl(env.DATABASE_URL)) {
