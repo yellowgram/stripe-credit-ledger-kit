@@ -1,0 +1,100 @@
+name: Bug
+description: Kit bug with a repro pack. Out-of-scope requests are closed with the SUPPORT.md reply.
+title: "Bug: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Support is GitHub Issues for 60 days from purchase, best-effort, no SLA, about two hours a week. See SUPPORT.md.
+
+        **Out of scope (this Issue will be closed with the paste-ready reply in SUPPORT.md):** hosted wallet or SaaS, Autumn/Metronome parity, Lock, Audit, Soft-WTP, implementation services, Polar inside the app, India-local ICP customization, live-key debugging, purchase money-back.
+
+        Do not paste secrets. A missing repro pack is commented and closed after 7 days. Vulnerability reports go to SECURITY.md, not this form.
+
+  - type: input
+    id: version
+    attributes:
+      label: Kit semver, tag, or checksum
+      description: "From package.json, the git tag, or the zip name. Example: 0.1.2. Sealed Release zips are v0.1.0 and v0.1.1. If you have a zip, also paste the SHA-256 from the GitHub Release notes or docs/CHECKSUMS.md."
+      placeholder: 0.1.2
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      description: Output of `node -v`. Engines require Node 20 or newer.
+      placeholder: v22.14.0
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: Ubuntu 24.04
+    validations:
+      required: true
+
+  - type: dropdown
+    id: db
+    attributes:
+      label: Database engine
+      options:
+        - sqlite
+        - postgres
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Failing test name or Stripe test-mode event id
+      description: "One of these is required. Test name from `npm test` (example: tests/webhook-status.test.ts > livemode mismatch is HTTP 400). Or a test-mode event id such as evt_... from `stripe listen` or the Dashboard test-mode event. Live-mode event ids are not accepted. No sk_, whsec_, or card numbers in this box."
+      placeholder: tests/webhook-idempotency.test.ts > same event twice does not double-grant
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Redacted env booleans and prefixes only
+      description: "No secret values, no database URLs, no full keys. Fill your own lines. Shape: ALLOW_DEMO_CONTROLS true or false; NODE_ENV; DATABASE_URL set yes or no; SQLITE_PATH set yes or no; STRIPE_SECRET_KEY prefix sk_test_, sk_live_, or unset; STRIPE_WEBHOOK_SECRET set yes or no; STRIPE_EXPECT_LIVEMODE true, false, or unset; LEDGER_API_SECRET set yes or no; NEXT_PUBLIC_APP_URL is an http(s) origin yes or no."
+      placeholder: "ALLOW_DEMO_CONTROLS: false"
+    validations:
+      required: true
+
+  - type: input
+    id: purchased
+    attributes:
+      label: Purchase date
+      description: Approximate is fine (YYYY-MM-DD). The window is 60 days from purchase.
+      placeholder: 2026-09-26
+    validations:
+      required: false
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, what you got. No secrets, no customer payment data.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Confirm before submit
+      options:
+        - label: I did not paste sk_live_, sk_test_ values, whsec_ values, database URLs, or card data.
+          required: true
+        - label: The repro box is a failing test name from this kit or a Stripe test-mode event id (evt_), not a live-mode event.
+          required: true
+        - label: This is not a request for hosted SaaS, Autumn/Metronome parity, Lock, Audit, Soft-WTP, implementation help, Polar-in-app, India-local ICP customization, or live-key debugging. I know those are closed with the SUPPORT.md reply.
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        If this report is out of scope, or the repro pack is still empty after a follow-up, maintainers close it. Out-of-scope close text is the fenced reply in SUPPORT.md. Incomplete reports are closed after 7 days.

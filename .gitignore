@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+dist
+coverage
+.env
+.env.local
+.env.*.local
+data/*.sqlite
+data/*.sqlite-journal
+data/*.sqlite-wal
+data/*.sqlite-shm
+data/last-demo-event.json
+*.log
+.DS_Store
+tsconfig.tsbuildinfo
