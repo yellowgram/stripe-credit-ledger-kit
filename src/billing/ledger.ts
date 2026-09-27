@@ -555,12 +555,6 @@ type PendingRow = {
   note: string | null;
 };
 
-const PENDING_MATCH_SQL = `SELECT id, payment_intent_id, charge_id, checkout_session_id, stripe_event_id, note
-  FROM pending_clawbacks
-  WHERE (? IS NOT NULL AND payment_intent_id = ?)
-     OR (? IS NOT NULL AND charge_id = ?)
-     OR (? IS NOT NULL AND checkout_session_id = ?)`;
-
 function pendingIdentity(ids: {
   paymentIntentId: string | null;
   chargeId: string | null;
@@ -569,17 +563,33 @@ function pendingIdentity(ids: {
   paymentIntentId: string | null;
   chargeId: string | null;
   checkoutSessionId: string | null;
-  params: readonly [string | null, string | null, string | null, string | null, string | null, string | null];
+  matchSql: string;
+  params: readonly string[];
 } {
   const paymentIntentId = blankToNull(ids.paymentIntentId);
   const chargeId = blankToNull(ids.chargeId);
   const checkoutSessionId = blankToNull(ids.checkoutSessionId);
-  return {
-    paymentIntentId,
-    chargeId,
-    checkoutSessionId,
-    params: [paymentIntentId, paymentIntentId, chargeId, chargeId, checkoutSessionId, checkoutSessionId],
-  };
+  const clauses: string[] = [];
+  const params: string[] = [];
+  if (paymentIntentId) {
+    clauses.push("payment_intent_id = ?");
+    params.push(paymentIntentId);
+  }
+  if (chargeId) {
+    clauses.push("charge_id = ?");
+    params.push(chargeId);
+  }
+  if (checkoutSessionId) {
+    clauses.push("checkout_session_id = ?");
+    params.push(checkoutSessionId);
+  }
+  const matchSql =
+    clauses.length === 0
+      ? ""
+      : `SELECT id, payment_intent_id, charge_id, checkout_session_id, stripe_event_id, note
+         FROM pending_clawbacks
+         WHERE ${clauses.join(" OR ")}`;
+  return { paymentIntentId, chargeId, checkoutSessionId, matchSql, params };
 }
 
 async function backfillPending(
@@ -622,8 +632,8 @@ export async function recordPendingClawback(
 ): Promise<PendingClawbackWrite> {
   assertIdempotencyKey(input.stripeEventId);
   const ids = pendingIdentity(input);
-  if (!ids.paymentIntentId && !ids.chargeId && !ids.checkoutSessionId) return "unkeyed";
-  const existing = await tx.get<PendingRow>(`${PENDING_MATCH_SQL} LIMIT 1`, ids.params);
+  if (!ids.matchSql) return "unkeyed";
+  const existing = await tx.get<PendingRow>(`${ids.matchSql} LIMIT 1`, ids.params);
   if (existing) {
     await backfillPending(tx, existing.id, ids);
     return "exists";
@@ -664,8 +674,8 @@ async function consumePendingClawback(
   },
 ): Promise<ClawbackResult | null> {
   const ids = pendingIdentity(input);
-  if (!ids.paymentIntentId && !ids.chargeId && !ids.checkoutSessionId) return null;
-  const rows = await tx.all<PendingRow>(PENDING_MATCH_SQL, ids.params);
+  if (!ids.matchSql) return null;
+  const rows = await tx.all<PendingRow>(ids.matchSql, ids.params);
   if (rows.length === 0) return null;
   const storedPayment = rows
     .map((row) => blankToNull(row.payment_intent_id))
