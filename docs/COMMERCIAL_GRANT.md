@@ -18,9 +18,9 @@ A paid Polar purchase of the **Credit Ledger** self-host kit (this repository’
 | Rights | Use and modify the kit for that organization’s own commercial production purposes for the product’s intended function |
 | Delivery | Kit zip + checksums as listed on Polar for that tag (and GitHub access when the listing includes it) |
 | Support | GitHub Issues for 60 days from purchase date; best-effort, no SLA, capped at about two hours a week — no SLA unless a separate written agreement says otherwise |
-| Refund | As stated on the Polar listing at purchase time (do not invent a longer window here) |
+| Refund | **None** for the current $79 kit SKU. No money-back window. A customer `charge.refunded` on the buyer’s Stripe account is a ledger clawback, not a refund of this purchase (`docs/REFUND_GLOSSARY.md`) |
 
-Price for the current kit SKU is set on Polar / yellowgram.dev Current card ($79 once; Polar product `93a844f7-d48e-414f-ac0c-adf905ffef46`). Do **not** put Polar checkout URLs in the README or inside the zip.
+Price for the current kit SKU is **$79 once** (Polar product `93a844f7-d48e-414f-ac0c-adf905ffef46`). The current named tag is `v0.1.2`. Do **not** put Polar checkout URLs in the README or inside the zip.
 
 ## What this grant does **not** include
 
@@ -47,7 +47,7 @@ Grandfathered for Credit Ledger (Stripe credit ledger kit). These tags and zips 
 | `v0.1.0` | First Polar-ready cut. MIT carve-out on `src/billing/ledger.ts`, `types.ts`, `errors.ts`, and on `docs/stripe-credit-grants-are-invoice-time.md` for that file alone. Asset `stripe-credit-ledger-kit-0.1.0.zip`. | `aa558100add2a3585190656ab1eb4b217cda6fafe596eaafe0dd02f9a9a33d94` |
 | `v0.1.1` | Hygiene cut. Same MIT carve-out as `v0.1.0`. Asset `stripe-credit-ledger-kit-0.1.1.zip` (commit `c633584`). | `a9bc28d82f673afc0eafbd1c3ad20c3047e95c7eb71ad70dd96f4b88473d41a8` |
 
-**0.1.2** is the forward fence only. From that version the whole kit, including the former extract and the free chapter, is PolyForm Noncommercial 1.0.0 plus this grant. This file does not create git tag `v0.1.2` and does not publish a Release zip.
+**0.1.2** is the current sold tag. Polar delivers `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). That zip is this grant plus PolyForm Noncommercial 1.0.0 for the whole kit, including the former extract and the free chapter. The public license is not MIT. That zip is inside this fence. Price is $79 once. No money-back window. Soft-WTP stays off. `v0.1.0` and `v0.1.1` above are grandfathered history. They are not the file Polar sells now.
 
 ## Operator responsibility
 

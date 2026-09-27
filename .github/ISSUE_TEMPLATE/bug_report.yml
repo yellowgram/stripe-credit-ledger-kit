@@ -15,7 +15,7 @@ body:
     id: version
     attributes:
       label: Kit semver, tag, or checksum
-      description: "From package.json, the git tag, or the zip name. Example: 0.1.2. Sealed Release zips are v0.1.0 and v0.1.1. If you have a zip, also paste the SHA-256 from the GitHub Release notes or docs/CHECKSUMS.md."
+      description: "From package.json, the git tag, or the zip name. Current Polar file: 0.1.2 (stripe-credit-ledger-kit-0.1.2.zip). v0.1.0 and v0.1.1 are grandfathered history. If you have a zip, also paste the SHA-256 from docs/CHECKSUMS.md."
       placeholder: 0.1.2
     validations:
       required: true

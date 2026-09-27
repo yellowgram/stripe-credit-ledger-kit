@@ -1,20 +1,22 @@
 # Checksums
 
-Verify a **downloaded GitHub Release zip**, not a folder you zipped yourself and not `git archive` of a later commit.
+Verify a **downloaded zip**, not a folder you zipped yourself and not `git archive` of a later commit.
 
-Compare the hex digest to the GitHub Release notes for that tag. Polar buyers should also see the same digest in the delivery note once the maintainer pastes it. This file ships inside the zip, so the digest of that zip is not embedded in the packed copy (the bytes would no longer match). The Release notes are the published digest.
+The zip Polar sells now is **0.1.2**. Compare `sha256sum` of that file to the digest below and to the GitHub Release notes for tag `v0.1.2`. `v0.1.0` and `v0.1.1` further down are grandfathered history. Do not reseal them. They are not the current Polar file.
 
-`v0.1.0` and `v0.1.1` below are grandfathered. Do not reseal them.
+This file also ships inside the 0.1.2 zip. The packed copy does not contain the hex line below (those bytes would no longer match). Do not recompute the 0.1.2 digest from a commit after `593a2d1`.
 
-## 0.1.2
+## 0.1.2 (current Polar file)
 
 | | |
 |---|---|
 | Asset | `stripe-credit-ledger-kit-0.1.2.zip` |
 | Tag | `v0.1.2` |
-| SHA-256 | `(see GitHub Release notes for tag v0.1.2)` |
+| Commit | `593a2d1` |
+| SHA-256 | `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832` |
+| License | PolyForm Noncommercial 1.0.0 + Suthirth Commercial Grant. The public license is not MIT. |
 
-This digest is the GitHub Release asset for tag `v0.1.2` (commit `350f65e` (orphan tip)), also printed in those Release notes. The copy of this file inside that zip does not contain this hex line. It points at the Release notes, because a digest stored in the packed bytes would not match the zip. Verify the downloaded file:
+This digest is the GitHub Release asset for tag `v0.1.2` (commit `593a2d1`), also printed in those Release notes. Polar delivers this file. The copy of this file inside that zip does not contain this hex line. It points at the Release notes, because a digest stored in the packed bytes would not match the zip. Verify the downloaded file:
 
 ```bash
 sha256sum stripe-credit-ledger-kit-0.1.2.zip
@@ -22,7 +24,7 @@ sha256sum stripe-credit-ledger-kit-0.1.2.zip
 
 The asset is `git archive` of tag `v0.1.2` with prefix `stripe-credit-ledger-kit-0.1.2/`. It omits `node_modules`, secret env files (`.env`, `.env.local`), SQLite databases, and `.git`. It includes `.env.example`. The omitted paths are untracked or gitignored, so the archive leaves them out. `.env.example` is tracked and is included.
 
-## 0.1.0
+## 0.1.0 (grandfathered)
 
 | | |
 |---|---|
@@ -32,7 +34,7 @@ The asset is `git archive` of tag `v0.1.2` with prefix `stripe-credit-ledger-kit
 
 Recomputed from the GitHub Release asset. It matches that digest.
 
-## 0.1.1
+## 0.1.1 (grandfathered)
 
 | | |
 |---|---|

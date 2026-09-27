@@ -6,7 +6,7 @@ Buy a credit pack in Stripe Checkout → webhook grants a balance → `check` / 
 
 yellowgram sells the kit on Polar. Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
 
-Version **0.1.2** (same ledger behavior as 0.1.0 and 0.1.1). Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). Sealed Release zips are `v0.1.0` and `v0.1.1`; check [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Tag `v0.1.2` and its zip are not part of this license fence. Changes: [CHANGELOG.md](CHANGELOG.md).
+Version **0.1.2**. Polar delivers `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). Buyers of that zip get PolyForm Noncommercial 1.0.0 plus a Suthirth Commercial Grant. The public license is not MIT. Price is **$79 once**, with **no money-back window**. Soft-WTP stays off. Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). Ledger behavior matches 0.1.0 and 0.1.1. Those earlier zips are grandfathered history ([docs/CHECKSUMS.md](docs/CHECKSUMS.md)). Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Use Autumn or Metronome instead when…
 
@@ -339,7 +339,7 @@ Source-available under the PolyForm Noncommercial License 1.0.0. Claims: source-
 
 Commercial production use requires a paid **Suthirth Commercial Grant** for **Credit Ledger** (this repository is the Stripe credit ledger kit). One organization. Perpetual for the named tag delivered with that purchase. Current SKU price: **$79 once**. No resale and no republishing this kit, or a substantial portion of it, as a competing starter, boilerplate, template, theme, or course. Terms: [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Public license text: `LICENSE`.
 
-From **0.1.2** the whole tree uses that fence, including `src/billing/ledger.ts`, `types.ts`, `errors.ts`, and the free chapter. There is no separate extract. Tags `v0.1.0` and `v0.1.1`, and their Release zips, stay as shipped and are not resealed. What those artifacts granted is in the grant’s prior-distributions section and in [CHANGELOG.md](CHANGELOG.md).
+The zip Polar sells now is **0.1.2** (`stripe-credit-ledger-kit-0.1.2.zip`). The whole tree in that zip uses this fence, including `src/billing/ledger.ts`, `types.ts`, `errors.ts`, and the free chapter. There is no separate extract. Soft-WTP stays off. Tags `v0.1.0` and `v0.1.1`, and their Release zips, are grandfathered history: rights already granted, and those artifacts are not resealed. They are not the current Polar file. What those artifacts granted is in the grant’s prior-distributions section and in [CHANGELOG.md](CHANGELOG.md).
 
 No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome.
 
