@@ -1,9 +1,7 @@
 /**
- * MIT extract — see src/billing/LICENSE.MIT. The rest of the repo is not MIT.
- *
  * A buyer can implement `Db` on Postgres, SQLite, or anything that can run the
  * statements in ledger.ts inside a transaction. The kit ships two adapters in
- * src/billing/db.ts (not part of the MIT extract).
+ * src/billing/db.ts.
  */
 
 export type LedgerKind =

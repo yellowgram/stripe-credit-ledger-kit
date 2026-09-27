@@ -2,9 +2,11 @@
 
 ## Boundary
 
-GitHub Issues on the private repository `yellowgram/stripe-credit-ledger-kit` for **60 days** from the purchase date. Best-effort, no SLA, capped at about two hours a week. No calls, no Slack, and no implementation pairing. The license is the commercial kit license in [LICENSE](LICENSE) (not MIT, no royalty). This queue does not renegotiate it.
+GitHub Issues on the private repository `yellowgram/stripe-credit-ledger-kit` for **60 days** from the purchase date. Best-effort, no SLA, capped at about two hours a week. No calls, no Slack, and no implementation pairing. Contact: hello@yellowgram.dev.
 
-Outside 60 days, the Issue will be closed. There is no perpetual update entitlement with the $79 zip. Behavior you are on is the tree you bought ([CHANGELOG.md](CHANGELOG.md)).
+The public license is PolyForm Noncommercial 1.0.0 in [LICENSE](LICENSE) (source-available; OSI open source = false). Commercial production use is the Suthirth Commercial Grant in [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md), sold by Suthirth solutions. This queue does not renegotiate either document. Copyright holder: yellowgram.
+
+Outside 60 days, the Issue will be closed. There is no perpetual update entitlement with the $79 once zip. Behavior you are on is the tree you bought ([CHANGELOG.md](CHANGELOG.md)). Soft-WTP stays off.
 
 ## Issues access (not Polar messages)
 
@@ -58,7 +60,7 @@ This product is the download: copy `src/billing` onto your Stripe account and yo
 
 If you wanted a control plane, use the README section "Use Autumn or Metronome instead when…" and the free chapter. Do not file that as a bug.
 
-The kit purchase has no money-back window (docs/REFUND_GLOSSARY.md). A customer `charge.refunded` / dispute full-pack clawback is a different word. The kit is not MIT. LICENSE is not renegotiated here.
+The kit purchase has no money-back window (docs/REFUND_GLOSSARY.md). A customer `charge.refunded` / dispute full-pack clawback is a different word. LICENSE and the Suthirth Commercial Grant are not renegotiated here. Soft-WTP stays off.
 
 In-scope bugs need the issue template: kit version or checksum, Node, OS, database, a failing test name or a Stripe test-mode event id, and redacted env booleans only. No secrets. Missing repro is closed after 7 days.
 ```

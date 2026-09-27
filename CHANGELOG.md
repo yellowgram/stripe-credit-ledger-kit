@@ -1,8 +1,19 @@
 # Changelog
 
-The $79 purchase is the tree you received. There is no perpetual update entitlement. Read this file before you replace a pinned zip. Soft-WTP stays off. This log does not promise a later update SKU.
+The $79 once purchase is the tree you received. There is no perpetual update entitlement. Read this file before you replace a pinned zip. Soft-WTP stays off. This log does not promise a later update SKU.
 
-Versions here match `package.json`, the git tag, and the Release asset `stripe-credit-ledger-kit-<version>.zip`.
+Versions here match `package.json`. Git tags and Release assets `stripe-credit-ledger-kit-<version>.zip` exist for 0.1.0 and 0.1.1. **0.1.2** is the license fence in this tree. This changelog entry does not create tag `v0.1.2` and does not publish a GitHub Release.
+
+## 0.1.2 — 2026-09-27
+
+License fence only. Ledger behavior is unchanged from 0.1.0 and 0.1.1. No env renames. No webhook status changes. No reserve-replay changes. No clawback-policy changes. No pack-schema changes. No demo-flag behavior changes.
+
+- Whole kit is source-available under PolyForm Noncommercial 1.0.0 (`LICENSE`) plus a Suthirth Commercial Grant (`docs/COMMERCIAL_GRANT.md`). Claims: source-available = true. OSI open source = false. Copyright holder remains yellowgram (`Copyright (c) 2026 yellowgram`). Seller: Suthirth solutions. Contact: hello@yellowgram.dev. Product name: Credit Ledger (Stripe credit ledger kit). Current SKU: $79 once.
+- MIT extract dropped going forward. `src/billing/LICENSE.MIT` is deleted. MIT headers are removed from `src/billing/ledger.ts`, `types.ts`, and `errors.ts`. The free chapter is not MIT. `package.json` `"license"` is `LicenseRef-PolyForm-Noncommercial-1.0.0`.
+- Soft-WTP stays off. The free chapter no longer contains a “would you pay ~$79” ask or `[WAITLIST_URL]`. No coupons. No cold invoices. No Polar checkout URLs in the README or zip-bound docs.
+- Prior tags are grandfathered and **not resealed**. Rights already granted for those sealed artifacts are not clawed back.
+  - `v0.1.0` — `stripe-credit-ledger-kit-0.1.0.zip` — SHA-256 `aa558100add2a3585190656ab1eb4b217cda6fafe596eaafe0dd02f9a9a33d94`. Shipped with an MIT carve-out on `src/billing/ledger.ts`, `types.ts`, `errors.ts`, and the free chapter for that file alone.
+  - `v0.1.1` — `stripe-credit-ledger-kit-0.1.1.zip` — SHA-256 `a9bc28d82f673afc0eafbd1c3ad20c3047e95c7eb71ad70dd96f4b88473d41a8` (commit `c633584`). Same MIT carve-out as `v0.1.0`.
 
 ## 0.1.1 — 2026-09-26
 
@@ -14,7 +25,7 @@ Hygiene only. Ledger behavior is the 0.1.0 baseline below. No env renames. No we
 - Issue form requires a repro pack. Missing repro is closed after 7 days.
 - Expected Issues path for the private repo: post-purchase collaborator invite with Read. Documented in `SUPPORT.md`. The maintainer sends the invite.
 - GitHub Actions runs Node **20** and **22** on both the SQLite job and the Postgres job. `engines.node` stays `>=20`.
-- Commercial kit license, not MIT. Use and modify the kit in a commercial product. No revenue royalty. No redistributing the kit as a starter, boilerplate, template, theme, or course. MIT stays scoped to `src/billing/ledger.ts`, `types.ts`, and `errors.ts`. The free chapter is MIT for that file only. The README reserve/finalize/release example may be copied into an application and does not MIT the README.
+- As shipped in this tag only: commercial kit license, with an MIT carve-out scoped to `src/billing/ledger.ts`, `types.ts`, and `errors.ts`, plus the free chapter for that file only. That carve-out is not the license of 0.1.2. This 0.1.1 zip is not rewritten. See 0.1.2.
 
 ## 0.1.0 — 2026-09-26
 

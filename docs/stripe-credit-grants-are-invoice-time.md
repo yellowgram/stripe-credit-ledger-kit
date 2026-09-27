@@ -1,10 +1,10 @@
 # Stripe Credit Grants Are Invoice-Time — When to Use Grants, a DIY Ledger, Metronome, or Autumn
 
 **Audience:** Indie AI founders wiring prepaid credits on Stripe
-**Status:** Public draft (marketing lead magnet for a DIY ledger kit)
-**Last updated:** 2026-09-25
+**Status:** Public chapter. It ships with the kit and stays public. Do not paywall it.
+**Last updated:** 2026-09-27
 **Not affiliated with** Stripe, Autumn, or Metronome.
-**License:** This file only is MIT, Copyright (c) 2026 yellowgram. The kit is not MIT. See the repository `LICENSE`.
+**License:** Same as the kit from version 0.1.2: PolyForm Noncommercial 1.0.0, Copyright (c) 2026 yellowgram. Source-available. OSI open source = false. Commercial production use needs a Suthirth Commercial Grant (`docs/COMMERCIAL_GRANT.md`). This file is not a separate license.
 
 If you are reading this inside the credit-ledger kit, the manual is the [README](../README.md). This chapter is the map, not the setup guide.
 
@@ -14,7 +14,7 @@ You are about to ship “credits” for your AI wrapper. Chat messages. Image ge
 
 Someone on Discord said: *just use Stripe Credit Grants*. Someone else said Autumn. Cursor scaffolded half a webhook handler and called it done.
 
-This chapter is the map before you pick a road. No product pitch in the middle. Soft ask at the end only.
+This chapter is the map before you pick a road.
 
 ---
 
@@ -214,15 +214,11 @@ If Path A fits, use Stripe’s docs and stop.
 If Path C fits, talk to Metronome / follow Stripe’s Metronome guides.
 If Path D fits, start on Autumn Free and ship product.
 
-**If Path B fits** — hard real-time gate, owned ledger, Checkout packs, no desire to run a control plane — a tested DIY kit can save you from rediscovering webhook idempotency, race-safe decrements, and failed-LLM release semantics.
+**If Path B fits** — hard real-time gate, owned ledger, Checkout packs, no desire to run a control plane — a tested DIY kit can save you from rediscovering webhook idempotency, race-safe decrements, and failed-LLM release semantics. Credit Ledger (the Stripe credit ledger kit) is that lane. Its terms are the repository `LICENSE` and `docs/COMMERCIAL_GRANT.md`.
 
-Would you pay **~$79** for a cloneable DIY ledger kit (Next.js + Postgres/SQLite + Stripe Checkout, tests for the edge cases above), **or** are you already on Autumn / a full AI boilerplate (e.g. ShipAI-class) and don’t need it?
+If you would handle the race and idempotency cases yourself, you do not need a kit. If you want owned code and a proven checklist, that is what the kit is for.
 
-Soft ask — reply, email, or waitlist: **[WAITLIST_URL]**
-
-If the answer is “I’d just ask Cursor” and you never hit the race/idempotency bugs, don’t buy a kit. If the answer is “I want owned code and a proven checklist,” that’s the only honest reason to pay.
-
-No fake case studies here. No “join 10,000 founders.” Decide on the tree, not the CTA.
+No fake case studies here. Decide on the tree.
 
 ---
 
