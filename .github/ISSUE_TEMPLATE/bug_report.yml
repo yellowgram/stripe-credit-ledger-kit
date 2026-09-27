@@ -15,8 +15,8 @@ body:
     id: version
     attributes:
       label: Kit semver, tag, or checksum
-      description: "From package.json, the git tag, or the zip name. Example: 0.1.1 or v0.1.1. If you have the zip, also paste the SHA-256 from the GitHub Release notes or docs/CHECKSUMS.md."
-      placeholder: v0.1.1
+      description: "From package.json, the git tag, or the zip name. Example: 0.1.2. Sealed Release zips are v0.1.0 and v0.1.1. If you have a zip, also paste the SHA-256 from the GitHub Release notes or docs/CHECKSUMS.md."
+      placeholder: 0.1.2
     validations:
       required: true
 

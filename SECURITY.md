@@ -20,4 +20,4 @@ No stack trace, payload, event dump, or secret in that Issue.
 
 [SUPPORT.md](SUPPORT.md) is the 60-day best-effort queue for kit bugs that already have a repro pack. That window is not a penetration-test retainer and not permission to post exploit details in Issues while a private report is pending.
 
-Billing correctness in your production is yours. The [license](LICENSE) has no warranty. This policy does not add auth, Lock, Audit, or a hosted wallet.
+Billing correctness in your production is yours. The public [license](LICENSE) is PolyForm Noncommercial 1.0.0 (source-available; OSI open source = false) and has no warranty. Commercial production use is the Suthirth Commercial Grant in [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Seller: Suthirth solutions. Contact: hello@yellowgram.dev. This policy does not add auth, Lock, Audit, or a hosted wallet.

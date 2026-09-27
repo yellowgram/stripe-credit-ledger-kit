@@ -1,8 +1,10 @@
 # Buyer start here
 
-Kit **0.1.1**. Polar delivered this zip. Polar is not in the app. Verify the file with [docs/CHECKSUMS.md](docs/CHECKSUMS.md).
+Kit **0.1.2**. Same ledger behavior as 0.1.0 and 0.1.1. Polar is not in the app. Sealed zips you can verify today are `v0.1.0` and `v0.1.1` ([docs/CHECKSUMS.md](docs/CHECKSUMS.md)). This tree does not publish tag `v0.1.2` or a Release zip.
 
-License: commercial, not MIT. Use and modify it in your product. No royalty. Do not resell or republish the kit as a starter, boilerplate, template, theme, or course. MIT only for `src/billing/ledger.ts`, `types.ts`, `errors.ts`, and the free chapter. [LICENSE](LICENSE).
+License: source-available under PolyForm Noncommercial 1.0.0. OSI open source = false. Commercial production use needs a **Suthirth Commercial Grant** from Suthirth solutions for **Credit Ledger** (Stripe credit ledger kit): one organization, perpetual for the named tag you purchased. Current SKU: **$79 once**. No resale. Copyright (c) 2026 yellowgram. [LICENSE](LICENSE) · [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Contact: hello@yellowgram.dev.
+
+`v0.1.0` and `v0.1.1` stay sealed. From 0.1.2 the whole kit, including `src/billing` and the free chapter, uses the license above.
 
 ## Not multi-tenant auth
 
@@ -49,4 +51,4 @@ Production babysitting is yours, not a hosted loop:
 
 [SUPPORT.md](SUPPORT.md): GitHub Issues for **60 days** from purchase, best-effort, **no SLA**, about two hours a week. Repro required. No live secrets. This repo is private. The support path is a **post-purchase collaborator invite** (Read, so you can open Issues). Polar messages are not the queue. Vulnerability reports go to [SECURITY.md](SECURITY.md), not Issues.
 
-[Troubleshooting](docs/TROUBLESHOOTING.md) · [Refund glossary](docs/REFUND_GLOSSARY.md) (no money-back on the zip; customer `charge.refunded` is a full-pack clawback) · [Listing](docs/POLAR_DELIVERABLES.md) · [Changelog](CHANGELOG.md) · [License](LICENSE)
+[Troubleshooting](docs/TROUBLESHOOTING.md) · [Refund glossary](docs/REFUND_GLOSSARY.md) (no money-back on the zip; customer `charge.refunded` is a full-pack clawback) · [Listing](docs/POLAR_DELIVERABLES.md) · [Changelog](CHANGELOG.md) · [License](LICENSE) · [Commercial grant](docs/COMMERCIAL_GRANT.md)

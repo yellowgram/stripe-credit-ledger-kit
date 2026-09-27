@@ -1,12 +1,20 @@
 # Checksums
 
-Verify the **downloaded GitHub Release zip**, not a folder you zipped yourself and not `git archive` of a later commit.
+Verify a **downloaded GitHub Release zip**, not a folder you zipped yourself and not `git archive` of a later commit.
 
-```bash
-sha256sum stripe-credit-ledger-kit-0.1.1.zip
-```
+Compare the hex digest to the GitHub Release notes for that tag. Polar buyers should also see the same digest in the delivery note once the maintainer pastes it. This file ships inside the zip, so the digest of that zip is not embedded in the packed copy (the bytes would no longer match). The Release notes are the published digest.
 
-Compare the hex digest to the GitHub Release notes for that tag. Polar buyers should also see the same digest in the delivery note once the maintainer pastes it. This file ships inside the zip, so the digest of that zip is not embedded in the packed copy (the bytes would no longer match). The Release notes are the published digest. After tag `v0.1.1` is packed, the default-branch copy of the `0.1.1` section repeats that same digest and names the tag.
+**0.1.2** is the license fence in this tree. It has no git tag and no Release zip. Do not invent a digest for it. `v0.1.0` and `v0.1.1` below are grandfathered. Do not reseal them.
+
+## 0.1.2
+
+| | |
+|---|---|
+| Asset | none |
+| Tag | none |
+| SHA-256 | none |
+
+`package.json` is 0.1.2. Tag `v0.1.2` and `stripe-credit-ledger-kit-0.1.2.zip` are created only after the license fence lands. This section gains a digest when that zip exists.
 
 ## 0.1.0
 

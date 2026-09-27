@@ -1,7 +1,4 @@
 /**
- * MIT License — this file only. Copyright (c) 2026 yellowgram.
- * Full notice: src/billing/LICENSE.MIT. The rest of the repository is not MIT.
- *
  * Policy (bill the reservation):
  * - check is advisory. It does not lock. A paused user is not ok.
  * - reserve and track are the hard gate. Both run

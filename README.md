@@ -6,7 +6,7 @@ Buy a credit pack in Stripe Checkout → webhook grants a balance → `check` / 
 
 yellowgram sells the kit on Polar. Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
 
-Version **0.1.1** (same ledger behavior as 0.1.0). Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). Pin the Release zip and check [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Changes: [CHANGELOG.md](CHANGELOG.md).
+Version **0.1.2** (same ledger behavior as 0.1.0 and 0.1.1). Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). Sealed Release zips are `v0.1.0` and `v0.1.1`; check [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Tag `v0.1.2` and its zip are not part of this license fence. Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Use Autumn or Metronome instead when…
 
@@ -32,7 +32,7 @@ Stay if you want owned Postgres (or SQLite) on your Stripe Checkout, a hard stop
 | Pack catalog (100 / 500 / 2,000) | `src/billing/packs.ts` |
 | Checkout Session (`userId`, `credits`, `packId`) | `src/billing/checkout.ts` |
 | Webhook: signature check + idempotent `stripe_events` | `src/billing/webhook.ts` |
-| `check`, `reserve`, `finalize`, `release`, `track` | `src/billing/ledger.ts` (MIT extract) |
+| `check`, `reserve`, `finalize`, `release`, `track` | `src/billing/ledger.ts` |
 | Tables | `credit_balances`, `credit_ledger_entries`, `stripe_events` |
 | Demo balance UI | `src/app` — replace this |
 | Edge-case tests | `tests/` |
@@ -261,14 +261,14 @@ The race test spawns two processes so the decrement is not just serialized on on
 
 `src/billing` does not import Next.js. Copy the folder. Wire your own user id (from your auth, not from the client body). Keep `ensureSchema` on boot or run the statements in `src/billing/schema.ts` from your migrator.
 
+You can implement `Db` yourself and still use `ledger.ts`, `types.ts`, and `errors.ts`. Those files are part of this kit. They are not a separate license. Adapters in `src/billing/db.ts`, Checkout, webhook, and catalog are the same license as the rest of the tree: PolyForm Noncommercial 1.0.0, plus a Suthirth Commercial Grant for commercial production. See `LICENSE` and [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md).
+
 Delete the demo shell when it is no longer useful:
 
 - `src/app` (balance page)
 - `src/demo` (fake LLM, reset, race)
 - `src/app/api/demo/*`
 - `POST /api/credits/track` if you call `track` from your server instead
-
-Only `src/billing/errors.ts`, `src/billing/types.ts`, and `src/billing/ledger.ts` are MIT, plus `src/billing/LICENSE.MIT`. You can drop that slice into another service and implement `Db` yourself. The adapters in `src/billing/db.ts`, Checkout, webhook, and catalog stay under the commercial kit license in `LICENSE`. They are not MIT.
 
 Routes in this repo attribute every call to `DEMO_USER_ID`, and only when `ALLOW_DEMO_CONTROLS=true` (or `x-ledger-secret` matches `LEDGER_API_SECRET` for checkout, check, and track). When you copy `src/billing`, the Checkout `userId` must come from your session. Never pass `DEMO_USER_ID` or any other env default as the customer. Ignore any `userId` in the JSON body.
 
@@ -320,20 +320,24 @@ src/demo/        fake LLM and demo reset — not a product
 src/server/      process-wide DB handle and demo user id
 tests/           edge cases
 scripts/         migrate, signed webhook fixture, hold reaper loop
-docs/            free chapter, listing paste, troubleshooting, refund glossary, checksums
+docs/            free chapter, commercial grant, listing paste, troubleshooting, refund glossary, checksums
 ```
 
 ## License
 
-Commercial kit license. The kit is **not** MIT. You may use and modify it in a commercial product. No revenue royalty. **No resale** and no republishing this kit, or a substantial portion of it, as a competing starter, boilerplate, template, theme, or course. See `LICENSE`.
+Source-available under the PolyForm Noncommercial License 1.0.0. Claims: source-available = true. OSI open source = false. Copyright (c) 2026 yellowgram. The copyright holder is yellowgram. Seller is Suthirth solutions.
 
-Only `src/billing/ledger.ts`, `types.ts`, and `errors.ts` are MIT (`src/billing/LICENSE.MIT`). The free chapter is MIT for that file alone. The reserve / finalize / release example in this README may be copied into your application. That does not make the README MIT.
+Commercial production use requires a paid **Suthirth Commercial Grant** for **Credit Ledger** (this repository is the Stripe credit ledger kit). One organization. Perpetual for the named tag delivered with that purchase. Current SKU price: **$79 once**. No resale and no republishing this kit, or a substantial portion of it, as a competing starter, boilerplate, template, theme, or course. Terms: [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Public license text: `LICENSE`.
+
+From **0.1.2** the whole tree uses that fence, including `src/billing/ledger.ts`, `types.ts`, `errors.ts`, and the free chapter. There is no separate extract. Tags `v0.1.0` and `v0.1.1`, and their Release zips, stay as shipped and are not resealed. What those artifacts granted is in the grant’s prior-distributions section and in [CHANGELOG.md](CHANGELOG.md).
 
 No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome.
 
+Contact: hello@yellowgram.dev · https://www.yellowgram.dev
+
 ## Support
 
-GitHub Issues for **60 days** from the purchase date. Best-effort, no SLA, capped at about two hours a week. Include the failing test name or a Stripe **test-mode** event id. Do not paste live secret keys, webhook signing secrets, or customer payment details.
+GitHub Issues for **60 days** from the purchase date. Best-effort, no SLA, capped at about two hours a week. Include the failing test name or a Stripe **test-mode** event id. Do not paste live secret keys, webhook signing secrets, or customer payment details. Contact: hello@yellowgram.dev.
 
 Full boundary, the private-repo collaborator path, and the out-of-scope reply: [SUPPORT.md](SUPPORT.md). Vulnerability reports: [SECURITY.md](SECURITY.md). Purchase refund versus customer clawback: [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
 
