@@ -12,9 +12,9 @@ Compare the hex digest to the GitHub Release notes for that tag. Polar buyers sh
 |---|---|
 | Asset | `stripe-credit-ledger-kit-0.1.2.zip` |
 | Tag | `v0.1.2` |
-| SHA-256 | `49f6d2e8d40c5a01718ace7a4efa3b370676936129110c0af6de5f5db9e0b925` |
+| SHA-256 | `401ed1a0f5c12c9a9c545bb4abaa8678a2087fc6897f347c0d2cd258def6796f` |
 
-This digest is the GitHub Release asset for tag `v0.1.2` (commit `9188a98`), also printed in those Release notes. The copy of this file inside that zip does not contain this hex line. It points at the Release notes, because a digest stored in the packed bytes would not match the zip. Verify the downloaded file:
+This digest is the GitHub Release asset for tag `v0.1.2` (commit `350f65e` (orphan tip)), also printed in those Release notes. The copy of this file inside that zip does not contain this hex line. It points at the Release notes, because a digest stored in the packed bytes would not match the zip. Verify the downloaded file:
 
 ```bash
 sha256sum stripe-credit-ledger-kit-0.1.2.zip
