@@ -51,6 +51,6 @@ Production babysitting is yours, not a hosted loop:
 
 ## Support boundary
 
-[SUPPORT.md](SUPPORT.md): GitHub Issues for **60 days** from purchase, best-effort, **no SLA**, about two hours a week. Repro required. No live secrets. This repo is private. The support path is a **post-purchase collaborator invite** (Read, so you can open Issues). Polar messages are not the queue. Vulnerability reports go to [SECURITY.md](SECURITY.md), not Issues.
+[SUPPORT.md](SUPPORT.md): GitHub Issues on the public repository `yellowgram/stripe-credit-ledger-kit` for **60 days** from purchase, best-effort, **no SLA**, about two hours a week. Repro required. No live secrets. No collaborator invite. Polar messages are not the queue. Vulnerability reports go to [SECURITY.md](SECURITY.md), not Issues.
 
 [Troubleshooting](docs/TROUBLESHOOTING.md) · [Refund glossary](docs/REFUND_GLOSSARY.md) (no money-back on the zip; customer `charge.refunded` is a full-pack clawback) · [Listing](docs/POLAR_DELIVERABLES.md) · [Changelog](CHANGELOG.md) · [License](LICENSE) · [Commercial grant](docs/COMMERCIAL_GRANT.md)
