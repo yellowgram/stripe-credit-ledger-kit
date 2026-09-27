@@ -28,7 +28,9 @@ npm test
 
 `npm test` is offline SQLite. It does not call Stripe and does not need the demo flag. CI runs the same suite on Node 20 and 22, SQLite and Postgres.
 
-Optional UI: `npm run dev`, then http://localhost:3000. The first migrate with the flag on, or the first request that opens the database with the flag on, grants 100 credits once (`seed:<DEMO_USER_ID>`). Later requests do not refill; the reset control does. Try spend, fail→release, last-credit race, and reset. Turn the flag off when you are done looking. Stripe CLI and `npm run demo:webhook` are in the [README](README.md). `npm test` does not need migrate.
+After migrate, `npm run demo` is the sealed fixture smoke: a signed `pack_100` grant, then a replay of that same event. No Stripe network and no card charge. Each run is a new event id.
+
+Optional UI: `npm run dev`, then http://localhost:3000. The first migrate with the flag on, or the first request that opens the database with the flag on, grants 100 credits once (`seed:<DEMO_USER_ID>`). Later requests do not refill; the reset control does. Try spend, fail→release, last-credit race, and reset. Turn the flag off when you are done looking. Stripe CLI Checkout (optional real test payment) and `npm run demo:webhook` are in the [README](README.md). `npm test` does not need migrate.
 
 Ship on Postgres, not a shared SQLite file: `docker compose up -d`, set `DATABASE_URL`, comment `SQLITE_PATH`.
 

@@ -2,7 +2,13 @@
 
 The $79 once purchase is the tree you received. There is no perpetual update entitlement. Read this file before you replace a pinned zip. Soft-WTP stays off. This log does not promise a later update SKU.
 
-Versions here match `package.json`. Git tags and Release assets `stripe-credit-ledger-kit-<version>.zip` exist for 0.1.0 and 0.1.1. **0.1.2** is the license fence in this tree. This changelog entry does not create tag `v0.1.2` and does not publish a GitHub Release.
+Versions here match `package.json`. Git tags and Release assets `stripe-credit-ledger-kit-<version>.zip` exist for 0.1.0 and 0.1.1. **0.1.2** is the license fence in this tree. The 0.1.2 section does not create tag `v0.1.2` and does not publish a GitHub Release.
+
+## Unreleased
+
+Ops only. Ledger behavior is unchanged from 0.1.2. No env renames. No webhook status changes. No reserve-replay changes. No clawback-policy changes. No pack-schema changes. No demo-flag behavior changes. No version bump.
+
+- `npm run demo` is a sealed local fixture smoke: a signed `checkout.session.completed` for `pack_100`, a grant on the migrated database, then a replay of that same event id. No Stripe network and no card charge. `npm run demo:webhook` still posts that fixture to a running dev server. Soft-WTP stays off.
 
 ## 0.1.2 — 2026-09-27
 

@@ -18,7 +18,7 @@ The status contract: bad signature, missing or placeholder secret, or livemode m
 
 **Why:** The success URL is navigation. Credits are granted only when `checkout.session.completed` is processed with `payment_status=paid`, or on `checkout.session.async_payment_succeeded` for delayed methods. If nothing is forwarding events to `/api/webhooks/stripe`, the page still loads.
 
-**Do this:** Run `stripe listen --forward-to localhost:3000/api/webhooks/stripe` (or your deployed endpoint) with the matching `whsec_`. Confirm the event, then the balance. `stripe events resend evt_...` of that same event must not grant again. `npm run demo:webhook` posts a local signed fixture to the dev server. It does not charge a card. The server and the script must share a non-placeholder `STRIPE_WEBHOOK_SECRET`.
+**Do this:** Run `stripe listen --forward-to localhost:3000/api/webhooks/stripe` (or your deployed endpoint) with the matching `whsec_`. Confirm the event, then the balance. `stripe events resend evt_...` of that same event must not grant again. `npm run demo` signs a local `checkout.session.completed`, grants `pack_100`, and replays that event id on the migrated database. It does not post to the dev server, call Stripe, or charge a card. `npm run demo:webhook` posts a local signed fixture to the dev server. It does not charge a card. The server and that script must share a non-placeholder `STRIPE_WEBHOOK_SECRET`.
 
 ## 3. Demo controls stay closed
 

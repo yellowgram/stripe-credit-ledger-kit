@@ -68,12 +68,22 @@ For the local walkthrough, set `ALLOW_DEMO_CONTROLS=true` in `.env.local` before
 
 ```bash
 npm run db:migrate
+npm run demo
+```
+
+`npm run demo` is the sealed fixture smoke. It signs a local `checkout.session.completed` for `pack_100`, grants those **100** credits to `DEMO_USER_ID` on the database you just migrated (`DATABASE_URL` when it is Postgres, otherwise `SQLITE_PATH`), then delivers that same event id again. The first delivery grants. The replay leaves the balance where it is. The signature is checked in-process with a built-in fixture secret. There is no Stripe API call and no card charge. Each run uses a new event id, so a second `npm run demo` grants another 100. The dev server does not need to be running.
+
+The kit purchase is **$79 once** and has **no money-back window**. This command does not send a customer `charge.refunded` (that event is a full-pack clawback inside the ledger). See [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
+
+```bash
 npm run dev
 ```
 
 Open http://localhost:3000.
 
-### Take a real test payment
+### Optional: a real test payment
+
+Stripe CLI Checkout is the optional real test payment: Stripe’s hosted page and a test-mode card.
 
 1. Install the [Stripe CLI](https://docs.stripe.com/stripe-cli) and `stripe login`.
 2. `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
@@ -89,16 +99,16 @@ stripe events resend evt_...
 
 Delayed payment methods (no instant capture) grant on `checkout.session.async_payment_succeeded` instead. `payment_intent.succeeded` is stored and ignored so it cannot grant a second time.
 
-### Idempotency without the CLI
+### Idempotency against the dev server
 
-With the dev server running and `STRIPE_WEBHOOK_SECRET` set to a real `whsec_` value (generate one with `stripe listen`, or any secret you also put in `.env.local`):
+`npm run demo` already checks grant-once on the migrated database. To post the same kind of signed fixture at the running app, start `npm run dev` and set `STRIPE_WEBHOOK_SECRET` to a real `whsec_` value (generate one with `stripe listen`, or any secret you also put in `.env.local`):
 
 ```bash
 npm run demo:webhook          # signed checkout.session.completed, +100 credits
 npm run demo:webhook -- --replay   # same event id, balance unchanged
 ```
 
-This fixture is local. It does not charge a card. Use Checkout when you want to see Stripe’s hosted page.
+This posts to `NEXT_PUBLIC_APP_URL` (default `http://localhost:3000`). It does not charge a card. Checkout above is the hosted test payment.
 
 ### Watch the edge cases in the UI
 
