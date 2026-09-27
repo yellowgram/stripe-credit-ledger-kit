@@ -1,8 +1,8 @@
 # Polar listing — Stripe credit ledger kit
 
-Listing paste for the Polar product. Version **0.1.2** (license fence). Price **$79 once**. Auto-delivered digital good only. Polar is the storefront. It is not imported by this repository. Ledger behavior matches 0.1.0 and 0.1.1. The license change is [CHANGELOG.md](../CHANGELOG.md).
+Listing paste for the Polar product. The file Polar sells now is version **0.1.2**: `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). Price **$79 once**. No money-back window. Soft-WTP is off. Auto-delivered digital good only. Polar is the storefront. It is not imported by this repository. Ledger behavior matches 0.1.0 and 0.1.1. Those earlier zips are grandfathered and are not resealed. The license change is [CHANGELOG.md](../CHANGELOG.md).
 
-**Hold.** Do not paste this file into Polar from the license-fence pull request. Do not replace the Polar file, do not retag, and do not reseal `v0.1.0` or `v0.1.1`. Tag `v0.1.2` and its zip come after freeze, then land. Product name for the grant is **Credit Ledger** (kit title: Stripe credit ledger kit). Seller: Suthirth solutions. Contact: hello@yellowgram.dev.
+Product name for the grant is **Credit Ledger** (kit title: Stripe credit ledger kit). Seller: Suthirth solutions. Contact: hello@yellowgram.dev. License of the sold zip: PolyForm Noncommercial 1.0.0 plus a Suthirth Commercial Grant. The public license is not MIT.
 
 ---
 
@@ -47,9 +47,7 @@ Same contract as the README. Do not soften it in the listing.
 
 ## How delivery works
 
-Do not attach a new Polar file in the license-fence change. There is no git tag `v0.1.2` and no GitHub Release asset yet.
-
-After freeze and land, Polar delivers one zip: the **v0.1.2** source tree from the GitHub Release asset `stripe-credit-ledger-kit-0.1.2.zip`. Until that asset exists, the sealed delivery remains tag **v0.1.1** / `stripe-credit-ledger-kit-0.1.1.zip`. Do not reseal `v0.1.0` or `v0.1.1`.
+Polar delivers one zip: `stripe-credit-ledger-kit-0.1.2.zip` from tag `v0.1.2` (commit `593a2d1`). SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`. That file is the current license fence. Do not reseal `v0.1.0` or `v0.1.1`. Do not describe the current Polar file as 0.1.1.
 
 Unzip the zip named on the order (or clone that tag). You own that tree. There is no account to activate and no hosted app to log into. Start at `BUYER_START_HERE.md`.
 
@@ -81,16 +79,16 @@ The kit states no money-back window for this $79 purchase. “Refunds” in the 
 
 Source-available under PolyForm Noncommercial 1.0.0. Claims: source-available = true. OSI open source = false. Copyright (c) 2026 yellowgram. Seller: Suthirth solutions. Contact: hello@yellowgram.dev.
 
-Commercial production use requires a paid Suthirth Commercial Grant for Credit Ledger (Stripe credit ledger kit): one organization, perpetual for the named tag delivered with that purchase. Current SKU: $79 once (Polar product `93a844f7-d48e-414f-ac0c-adf905ffef46`). You may not redistribute, resell, or republish the kit (or a substantial portion of it) as a competing starter, boilerplate, template, theme, or course, and you may not offer a download whose purpose is to give third parties this kit. From 0.1.2 the whole tree uses this fence, including `src/billing` and the free chapter. No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome. Full text: `LICENSE` and `docs/COMMERCIAL_GRANT.md`.
+Commercial production use requires a paid Suthirth Commercial Grant for Credit Ledger (Stripe credit ledger kit): one organization, perpetual for the named tag delivered with that purchase. Current SKU: $79 once (Polar product `93a844f7-d48e-414f-ac0c-adf905ffef46`), tag `v0.1.2`, file `stripe-credit-ledger-kit-0.1.2.zip`. You may not redistribute, resell, or republish the kit (or a substantial portion of it) as a competing starter, boilerplate, template, theme, or course, and you may not offer a download whose purpose is to give third parties this kit. The sold 0.1.2 zip uses this fence for the whole tree, including `src/billing` and the free chapter. The public license is not MIT. No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome. Full text: `LICENSE` and `docs/COMMERCIAL_GRANT.md`.
 
-Tags `v0.1.0` and `v0.1.1` shipped with a narrower carve-out and are not resealed. See `docs/COMMERCIAL_GRANT.md` (prior distributions) and `CHANGELOG.md`.
+Tags `v0.1.0` and `v0.1.1` shipped with a narrower carve-out and are not resealed. They are grandfathered history, not the current Polar file. See `docs/COMMERCIAL_GRANT.md` (prior distributions) and `CHANGELOG.md`.
 
 ---
 
 ## CoS notes (do not paste into the public listing)
 
-- **Hold — do not edit Polar from this change.** Do not attach a new file, do not retag, and do not reseal `v0.1.0` or `v0.1.1`. The sealed `v0.1.1` asset stays `stripe-credit-ledger-kit-0.1.1.zip`, SHA-256 `a9bc28d82f673afc0eafbd1c3ad20c3047e95c7eb71ad70dd96f4b88473d41a8` (commit `c633584`). `v0.1.0` stays SHA-256 `aa558100add2a3585190656ab1eb4b217cda6fafe596eaafe0dd02f9a9a33d94`. After freeze and land, attach `stripe-credit-ledger-kit-0.1.2.zip` from tag `v0.1.2` and paste that new digest. Do not invent the 0.1.2 digest here. The repository is private, so a release asset URL is not a public download link.
-- Set Polar’s refund toggle to **none**. The kit states no money-back window. A platform default that still offers a refund contradicts `docs/REFUND_GLOSSARY.md`.
+- Polar already delivers `stripe-credit-ledger-kit-0.1.2.zip` from tag `v0.1.2` (commit `593a2d1`), SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`. Do not replace that file with `v0.1.0` or `v0.1.1`. Do not reseal those grandfathered assets. `v0.1.1` stays `stripe-credit-ledger-kit-0.1.1.zip`, SHA-256 `a9bc28d82f673afc0eafbd1c3ad20c3047e95c7eb71ad70dd96f4b88473d41a8` (commit `c633584`). `v0.1.0` stays SHA-256 `aa558100add2a3585190656ab1eb4b217cda6fafe596eaafe0dd02f9a9a33d94`. The repository is private, so a release asset URL is not a public download link. Do not put a Polar checkout URL in the README or the zip.
+- Keep Polar’s refund toggle at **none**. The sold $79 kit has no money-back window. A platform default that offers a refund contradicts `docs/REFUND_GLOSSARY.md`.
 - **Issues access (you execute this):** after purchase, invite the buyer’s GitHub account as a collaborator with **Read** on `yellowgram/stripe-credit-ledger-kit` (open Issues, no push). An equivalent private mirror is allowed only if you actually read those Issues. Polar direct messages are not the 60-day queue. The kit documents this path in `SUPPORT.md`; it does not send the invite.
 - Enable GitHub private vulnerability reporting so `SECURITY.md`’s advisory form works. Buyers must not put zero-days in Issues.
 - Soft-WTP stays off. The free chapter does not contain a waitlist URL or a “would you pay” ask. Do not add coupons, cold invoices, or a waitlist.

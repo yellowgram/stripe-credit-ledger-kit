@@ -2,18 +2,20 @@
 
 The $79 once purchase is the tree you received. There is no perpetual update entitlement. Read this file before you replace a pinned zip. Soft-WTP stays off. This log does not promise a later update SKU.
 
-Versions here match `package.json`. Git tags and Release assets `stripe-credit-ledger-kit-<version>.zip` exist for 0.1.0 and 0.1.1. **0.1.2** is the license fence in this tree. The 0.1.2 section does not create tag `v0.1.2` and does not publish a GitHub Release.
+Versions here match `package.json`. The current Polar file is tag `v0.1.2`, asset `stripe-credit-ledger-kit-0.1.2.zip`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832` (commit `593a2d1`). That zip is inside the PolyForm Noncommercial 1.0.0 + Suthirth Commercial Grant fence. The public license is not MIT. `v0.1.0` and `v0.1.1` remain grandfathered history and are not resealed.
 
 ## Unreleased
 
-Ops only. Ledger behavior is unchanged from 0.1.2. No env renames. No webhook status changes. No reserve-replay changes. No clawback-policy changes. No pack-schema changes. No demo-flag behavior changes. No version bump.
+Ops and buyer-copy only. Ledger behavior is unchanged from 0.1.2. No env renames. No webhook status changes. No reserve-replay changes. No clawback-policy changes. No pack-schema changes. No demo-flag behavior changes. No version bump. The 0.1.2 zip is not resealed.
 
+- Buyer copy names the Polar file as `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`) under PolyForm Noncommercial 1.0.0 plus the Suthirth Commercial Grant. That zip stays inside the license fence. `v0.1.0` and `v0.1.1` stay grandfathered notes. Soft-WTP stays off. Price stays $79 once. No money-back window.
 - `npm run demo` is a sealed local fixture smoke: a signed `checkout.session.completed` for `pack_100`, a grant on the migrated database, then a replay of that same event id. No Stripe network and no card charge. `npm run demo:webhook` still posts that fixture to a running dev server. Soft-WTP stays off.
 
 ## 0.1.2 — 2026-09-27
 
-License fence only. Ledger behavior is unchanged from 0.1.0 and 0.1.1. No env renames. No webhook status changes. No reserve-replay changes. No clawback-policy changes. No pack-schema changes. No demo-flag behavior changes.
+License fence for the sold zip. Ledger behavior is unchanged from 0.1.0 and 0.1.1. No env renames. No webhook status changes. No reserve-replay changes. No clawback-policy changes. No pack-schema changes. No demo-flag behavior changes.
 
+- Sold file: `stripe-credit-ledger-kit-0.1.2.zip`, tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`. This zip is the license fence in this section. Price $79 once. No money-back window.
 - Whole kit is source-available under PolyForm Noncommercial 1.0.0 (`LICENSE`) plus a Suthirth Commercial Grant (`docs/COMMERCIAL_GRANT.md`). Claims: source-available = true. OSI open source = false. Copyright holder remains yellowgram (`Copyright (c) 2026 yellowgram`). Seller: Suthirth solutions. Contact: hello@yellowgram.dev. Product name: Credit Ledger (Stripe credit ledger kit). Current SKU: $79 once.
 - MIT extract dropped going forward. `src/billing/LICENSE.MIT` is deleted. MIT headers are removed from `src/billing/ledger.ts`, `types.ts`, and `errors.ts`. The free chapter is not MIT. `package.json` `"license"` is `LicenseRef-PolyForm-Noncommercial-1.0.0`.
 - Soft-WTP stays off. The free chapter no longer contains a “would you pay ~$79” ask or `[WAITLIST_URL]`. No coupons. No cold invoices. No Polar checkout URLs in the README or zip-bound docs.

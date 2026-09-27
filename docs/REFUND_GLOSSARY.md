@@ -6,7 +6,7 @@ Two different words. Mixing them up makes a ledger clawback look like a broken d
 
 The $79 kit has **no money-back window**. Polar delivered a file. That sale is not reversed because a demo failed, because a limit in this glossary surprised you, or because the product is the wrong fit (see the Autumn / Metronome walk-away in the [README](../README.md)).
 
-The listing text is [POLAR_DELIVERABLES.md](POLAR_DELIVERABLES.md). The written policy is **none**. The maintainer is supposed to set Polar's refund control to none before the listing is live. This file stays the policy if that control is still a platform default.
+The listing text is [POLAR_DELIVERABLES.md](POLAR_DELIVERABLES.md). The written policy for the $79 kit is **none**. The sold listing has no money-back window. This file is that policy.
 
 ## Customer charge (your Stripe account)
 

@@ -1,10 +1,10 @@
 # Buyer start here
 
-Kit **0.1.2**. Same ledger behavior as 0.1.0 and 0.1.1. Polar is not in the app. Sealed zips you can verify today are `v0.1.0` and `v0.1.1` ([docs/CHECKSUMS.md](docs/CHECKSUMS.md)). This tree does not publish tag `v0.1.2` or a Release zip.
+Kit **0.1.2**. Polar delivers `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). Same ledger behavior as 0.1.0 and 0.1.1. Polar is not in the app. Verify that zip in [docs/CHECKSUMS.md](docs/CHECKSUMS.md). `v0.1.0` and `v0.1.1` are grandfathered history. They are not the file Polar sells now.
 
-License: source-available under PolyForm Noncommercial 1.0.0. OSI open source = false. Commercial production use needs a **Suthirth Commercial Grant** from Suthirth solutions for **Credit Ledger** (Stripe credit ledger kit): one organization, perpetual for the named tag you purchased. Current SKU: **$79 once**. No resale. Copyright (c) 2026 yellowgram. [LICENSE](LICENSE) · [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Contact: hello@yellowgram.dev.
+License: source-available under PolyForm Noncommercial 1.0.0. OSI open source = false. The public license is not MIT. Commercial production use needs a **Suthirth Commercial Grant** from Suthirth solutions for **Credit Ledger** (Stripe credit ledger kit): one organization, perpetual for the named tag you purchased. Current SKU: **$79 once**. No money-back window. Soft-WTP stays off. No resale. Copyright (c) 2026 yellowgram. [LICENSE](LICENSE) · [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Contact: hello@yellowgram.dev.
 
-`v0.1.0` and `v0.1.1` stay sealed. From 0.1.2 the whole kit, including `src/billing` and the free chapter, uses the license above.
+The zip you bought, **0.1.2**, uses the license above for the whole kit, including `src/billing` and the free chapter. There is no MIT extract. `v0.1.0` and `v0.1.1` stay as shipped (grandfathered; not resealed).
 
 ## Not multi-tenant auth
 
