@@ -10,6 +10,7 @@ Ops and buyer-copy only. Ledger behavior is unchanged from 0.1.2. No env renames
 
 - Buyer copy names the Polar file as `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`) under PolyForm Noncommercial 1.0.0 plus the Suthirth Commercial Grant. That zip stays inside the license fence. `v0.1.0` and `v0.1.1` stay grandfathered notes. Soft-WTP stays off. Price stays $79 once. No money-back window.
 - `npm run demo` is a sealed local fixture smoke: a signed `checkout.session.completed` for `pack_100`, a grant on the migrated database, then a replay of that same event id. No Stripe network and no card charge. `npm run demo:webhook` still posts that fixture to a running dev server. Soft-WTP stays off.
+- Support is GitHub Issues on the public repository `yellowgram/stripe-credit-ledger-kit` for 60 days from purchase. Best-effort, no SLA, about two hours a week. Polar messages are not the queue. A post-purchase collaborator invite is not the path. Soft-WTP stays off. Price stays $79 once. No money-back window. PolyForm Noncommercial 1.0.0 plus the Suthirth Commercial Grant. Source-available; OSI open source = false. Not MIT.
 
 ## 0.1.2 — 2026-09-27
 
@@ -31,7 +32,7 @@ Hygiene only. Ledger behavior is the 0.1.0 baseline below. No env renames. No we
 - `x-ledger-secret` still bills `DEMO_USER_ID`. That warning is on the front door and beside Environment / Known limits.
 - `docs/TROUBLESHOOTING.md`, `docs/REFUND_GLOSSARY.md`, `SUPPORT.md` (including the out-of-scope reply), `SECURITY.md`, `docs/CHECKSUMS.md`.
 - Issue form requires a repro pack. Missing repro is closed after 7 days.
-- Expected Issues path for the private repo: post-purchase collaborator invite with Read. Documented in `SUPPORT.md`. The maintainer sends the invite.
+- That tag’s `SUPPORT.md` described a post-purchase collaborator invite as the Issues path. That description is not current. See Unreleased.
 - GitHub Actions runs Node **20** and **22** on both the SQLite job and the Postgres job. `engines.node` stays `>=20`.
 - As shipped in this tag only: commercial kit license, with an MIT carve-out scoped to `src/billing/ledger.ts`, `types.ts`, and `errors.ts`, plus the free chapter for that file only. That carve-out is not the license of 0.1.2. This 0.1.1 zip is not rewritten. See 0.1.2.
 

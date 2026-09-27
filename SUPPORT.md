@@ -2,7 +2,7 @@
 
 ## Boundary
 
-GitHub Issues on the private repository `yellowgram/stripe-credit-ledger-kit` for **60 days** from the purchase date. Best-effort, no SLA, capped at about two hours a week. No calls, no Slack, and no implementation pairing. Contact: hello@yellowgram.dev.
+GitHub Issues on the public repository `yellowgram/stripe-credit-ledger-kit` for **60 days** from the purchase date. Best-effort, no SLA, capped at about two hours a week. No calls, no Slack, and no implementation pairing. Contact: hello@yellowgram.dev.
 
 The public license is PolyForm Noncommercial 1.0.0 in [LICENSE](LICENSE) (source-available; OSI open source = false). Commercial production use is the Suthirth Commercial Grant in [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md), sold by Suthirth solutions. This queue does not renegotiate either document. Copyright holder: yellowgram.
 
@@ -10,11 +10,7 @@ Outside 60 days, the Issue will be closed. There is no perpetual update entitlem
 
 ## Issues access (not Polar messages)
 
-The repository is private. Polar chat is not the support queue.
-
-**Expected path:** after purchase, the maintainer invites the GitHub account you name as a **collaborator with Read** on `yellowgram/stripe-credit-ledger-kit`. Read can open Issues. It cannot push. An equivalent handoff (a private mirror whose Issues the maintainer actually reads) counts only if it is that same 60-day queue.
-
-The maintainer sends the invite. This kit does not send it. Until the invite exists, there is still no Polar-DM support desk.
+The repository is public and source-available. Open GitHub Issues on `yellowgram/stripe-credit-ledger-kit`. No collaborator invite. Polar chat is not the support queue. Polar messages are not the 60-day queue.
 
 ## What you must include
 

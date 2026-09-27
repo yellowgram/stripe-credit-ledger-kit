@@ -347,9 +347,9 @@ Contact: hello@yellowgram.dev · https://www.yellowgram.dev
 
 ## Support
 
-GitHub Issues for **60 days** from the purchase date. Best-effort, no SLA, capped at about two hours a week. Include the failing test name or a Stripe **test-mode** event id. Do not paste live secret keys, webhook signing secrets, or customer payment details. Contact: hello@yellowgram.dev.
+GitHub Issues on the public repository `yellowgram/stripe-credit-ledger-kit` for **60 days** from the purchase date. Best-effort, no SLA, capped at about two hours a week. Include the failing test name or a Stripe **test-mode** event id. Do not paste live secret keys, webhook signing secrets, or customer payment details. Contact: hello@yellowgram.dev.
 
-Full boundary, the private-repo collaborator path, and the out-of-scope reply: [SUPPORT.md](SUPPORT.md). Vulnerability reports: [SECURITY.md](SECURITY.md). Purchase refund versus customer clawback: [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
+Full boundary and the out-of-scope reply: [SUPPORT.md](SUPPORT.md). Vulnerability reports: [SECURITY.md](SECURITY.md). Purchase refund versus customer clawback: [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
 
 ## Free chapter
 
