@@ -1,10 +1,10 @@
 # Buyer start here
 
-Source version **0.2.0** (`package.json`). Polar still delivers `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). That zip is not resealed. Polar is not in the app. Verify that zip in [docs/CHECKSUMS.md](docs/CHECKSUMS.md). `v0.1.0` and `v0.1.1` are grandfathered history. They are not the file Polar sells now.
+Source version **0.2.0** (`package.json`). Polar delivers `stripe-credit-ledger-kit-0.2.0.zip` (tag `v0.2.0`, commit `ed435e2`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`). Polar is not in the app. Verify that zip in [docs/CHECKSUMS.md](docs/CHECKSUMS.md). The prior sold zip `v0.1.2`, and tags `v0.1.0` and `v0.1.1`, stay as shipped. They are not the file Polar sells now. Do not reseal them.
 
 License: source-available under PolyForm Noncommercial 1.0.0. OSI open source = false. The public license is not MIT. Commercial production use needs a **Suthirth Commercial Grant** from Suthirth solutions for **Credit Ledger** (Stripe credit ledger kit): one organization, perpetual for the named tag you purchased. Current SKU: **$79 once**. No money-back window. Soft-WTP stays off. No resale. Copyright (c) 2026 yellowgram. [LICENSE](LICENSE) · [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Contact: hello@yellowgram.dev.
 
-The zip you bought, **0.1.2**, uses the license above for the whole kit, including `src/billing` and the free chapter. There is no MIT extract. `v0.1.0` and `v0.1.1` stay as shipped (grandfathered; not resealed).
+The zip Polar sells now, **0.2.0**, uses the license above for the whole kit, including `src/billing` and the free chapter. There is no MIT extract. The prior sold zip `v0.1.2` uses that same fence and stays as shipped. `v0.1.0` and `v0.1.1` stay as shipped (grandfathered; not resealed).
 
 ## Not multi-tenant auth
 

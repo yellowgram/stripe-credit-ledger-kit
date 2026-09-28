@@ -4,7 +4,7 @@
 **Status:** Public chapter. It ships with the kit and stays public. Do not paywall it.
 **Last updated:** 2026-09-27
 **Not affiliated with** Stripe, Autumn, or Metronome.
-**License:** Same as the sold kit **0.1.2** (`stripe-credit-ledger-kit-0.1.2.zip`): PolyForm Noncommercial 1.0.0, Copyright (c) 2026 yellowgram. Source-available. OSI open source = false. The public license is not MIT. Commercial production use needs a Suthirth Commercial Grant (`docs/COMMERCIAL_GRANT.md`). This file is not a separate license.
+**License:** Same as the sold kit **0.2.0** (`stripe-credit-ledger-kit-0.2.0.zip`): PolyForm Noncommercial 1.0.0, Copyright (c) 2026 yellowgram. Source-available. OSI open source = false. The public license is not MIT. Commercial production use needs a Suthirth Commercial Grant (`docs/COMMERCIAL_GRANT.md`). This file is not a separate license.
 
 If you are reading this inside the credit-ledger kit, the manual is the [README](../README.md). This chapter is the map, not the setup guide.
 
