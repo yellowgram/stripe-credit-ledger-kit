@@ -364,3 +364,6 @@ Full boundary and the out-of-scope reply: [SUPPORT.md](SUPPORT.md). Vulnerabilit
 ## Free chapter
 
 [Stripe Credit Grants Are Invoice-Time](docs/stripe-credit-grants-are-invoice-time.md) — when to use Grants, this kind of ledger, Metronome, or Autumn. It is public on purpose. Do not paywall it.
+
+
+Status: [docs/STATUS.md](docs/STATUS.md).
