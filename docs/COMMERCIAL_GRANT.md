@@ -5,7 +5,7 @@
 **Public brand:** Credit Ledger · yellowgram  
 **Contact:** hello@yellowgram.dev · https://www.yellowgram.dev  
 **Public license:** PolyForm Noncommercial 1.0.0 (`LICENSE`) — source-available; not an OSI-approved license  
-**Soft-WTP:** off (no coupons, no cold invoices)
+**Coupons / cold invoices:** off
 
 ## What you buy
 
@@ -48,9 +48,9 @@ Grandfathered for Credit Ledger (Stripe credit ledger kit). These tags and zips 
 | `v0.1.0` | First Polar-ready cut. MIT carve-out on `src/billing/ledger.ts`, `types.ts`, `errors.ts`, and on `docs/stripe-credit-grants-are-invoice-time.md` for that file alone. Asset `stripe-credit-ledger-kit-0.1.0.zip`. | `aa558100add2a3585190656ab1eb4b217cda6fafe596eaafe0dd02f9a9a33d94` |
 | `v0.1.1` | Hygiene cut. Same MIT carve-out as `v0.1.0`. Asset `stripe-credit-ledger-kit-0.1.1.zip` (commit `c633584`). | `a9bc28d82f673afc0eafbd1c3ad20c3047e95c7eb71ad70dd96f4b88473d41a8` |
 
-**0.2.0** is the current sold tag. Polar delivers `stripe-credit-ledger-kit-0.2.0.zip` (tag `v0.2.0`, commit `ed435e2`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`). That zip is this grant plus PolyForm Noncommercial 1.0.0 for the whole kit, including the former extract and the free chapter. The public license is not MIT. That zip is inside this fence. Price is $79 once. No money-back window. Soft-WTP stays off. `v0.1.0` and `v0.1.1` above are grandfathered history. They are not the file Polar sells now.
+**0.2.0** is the current sold tag. Polar delivers `stripe-credit-ledger-kit-0.2.0.zip` (tag `v0.2.0`, commit `ed435e2`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`). That zip is this grant plus PolyForm Noncommercial 1.0.0 for the whole kit, including the former extract and the free chapter. The public license is not MIT. That zip is inside this fence. Price is $79 once. No money-back window. coupons stays off. `v0.1.0` and `v0.1.1` above are grandfathered history. They are not the file Polar sells now.
 
-**0.1.2** is the prior sold tag, withdrawn from the shelf. Polar previously delivered `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). Anyone who already bought that zip keeps the rights for it. Do not reseal it. It is not the file Polar sells now. That zip uses this same grant plus PolyForm Noncommercial 1.0.0. The public license is not MIT. Soft-WTP stays off.
+**0.1.2** is the prior sold tag, withdrawn from the shelf. Polar previously delivered `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). Anyone who already bought that zip keeps the rights for it. Do not reseal it. It is not the file Polar sells now. That zip uses this same grant plus PolyForm Noncommercial 1.0.0. The public license is not MIT. coupons stays off.
 
 ## Operator responsibility
 

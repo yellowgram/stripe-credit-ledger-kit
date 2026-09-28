@@ -2,22 +2,18 @@
 
 ## Private vulnerability reports
 
-Do not open a GitHub Issue with a proof of concept, exploit steps, or a zero-day. Do not paste live Stripe keys, webhook signing secrets, database URLs, or customer payment details into Issues, pull requests, or Polar messages.
+Do not open a GitHub Issue with a proof of concept, exploit steps, or a zero-day. Do not paste live Stripe keys, Polar tokens, database URLs, webhook secrets, or customer billing details into Issues, pull requests, or Polar messages.
 
-Report privately on this repository:
+Report privately by email to **hello@yellowgram.dev** with subject `Credit Ledger security`. Prefer a short description and a redacted repro. Do not attach live secrets.
+
+If this repository enables GitHub private vulnerability reporting, you may also use:
 
 https://github.com/yellowgram/stripe-credit-ledger-kit/security/advisories/new
 
-The maintainer enables GitHub private vulnerability reporting so that form accepts submissions. If the page says reporting is turned off, open an Issue whose **entire** body is:
-
-```
-Please enable private security advisories.
-```
-
-No stack trace, payload, event dump, or secret in that Issue.
+If that page says reporting is turned off, email hello@yellowgram.dev instead. Do not open a public Issue that contains exploit detail.
 
 ## Support is a different path
 
-[SUPPORT.md](SUPPORT.md) is the 60-day best-effort queue for kit bugs that already have a repro pack. That window is not a penetration-test retainer and not permission to post exploit details in Issues while a private report is pending.
+[SUPPORT.md](SUPPORT.md) is best-effort support for kit questions within the purchase window. That path is not a penetration-test retainer and not permission to post exploit details while a private report is pending.
 
-Billing correctness in your production is yours. The public [license](LICENSE) is PolyForm Noncommercial 1.0.0 (source-available; OSI open source = false) and has no warranty. Commercial production use is the Suthirth Commercial Grant in [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Seller: Suthirth solutions. Contact: hello@yellowgram.dev. This policy does not add auth, Lock, Audit, or a hosted wallet.
+Production correctness is yours. The public [license](LICENSE) is PolyForm Noncommercial 1.0.0 (source-available; OSI-approved license = false) and has no warranty. Commercial production use is the Credit Ledger commercial grant in [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Legal seller: Suthirth Solutions, operating as yellowgram. Contact: hello@yellowgram.dev.
