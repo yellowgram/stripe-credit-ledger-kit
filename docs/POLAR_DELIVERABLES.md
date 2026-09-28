@@ -2,7 +2,7 @@
 
 Listing paste for the Polar product. The file Polar sells now is version **0.2.0**: `stripe-credit-ledger-kit-0.2.0.zip` (tag `v0.2.0`, commit `ed435e2`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`). Price **$79 once**. No money-back window. Soft-WTP is off. Auto-delivered digital good only. Polar is the storefront. It is not imported by this repository. `v0.1.2` is the prior sold file, withdrawn from the shelf. Anyone who already bought it keeps that zip. Do not reseal it. `v0.1.0` and `v0.1.1` are grandfathered and are not resealed. What changed is [CHANGELOG.md](../CHANGELOG.md).
 
-Product name for the grant is **Credit Ledger** (kit title: Stripe credit ledger kit). Seller: Suthirth solutions. Contact: hello@yellowgram.dev. License of the sold zip: PolyForm Noncommercial 1.0.0 plus a Suthirth Commercial Grant. The public license is not MIT.
+Product name for the grant is **Credit Ledger** (kit title: Stripe credit ledger kit). Legal seller: Suthirth Solutions, operating as yellowgram. Contact: hello@yellowgram.dev. License of the sold zip: PolyForm Noncommercial 1.0.0 plus a Credit Ledger commercial grant. The public license is not MIT.
 
 ---
 
@@ -77,9 +77,9 @@ The kit states no money-back window for this $79 purchase. “Refunds” in the 
 
 ## License
 
-Source-available under PolyForm Noncommercial 1.0.0. Claims: source-available = true. OSI open source = false. Copyright (c) 2026 yellowgram. Seller: Suthirth solutions. Contact: hello@yellowgram.dev.
+Source-available under PolyForm Noncommercial 1.0.0. Claims: source-available = true. OSI open source = false. Copyright (c) 2026 yellowgram. Legal seller: Suthirth Solutions, operating as yellowgram. Contact: hello@yellowgram.dev.
 
-Commercial production use requires a paid Suthirth Commercial Grant for Credit Ledger (Stripe credit ledger kit): one organization, perpetual for the named tag delivered with that purchase. Current SKU: $79 once (Polar product `93a844f7-d48e-414f-ac0c-adf905ffef46`), tag `v0.2.0`, file `stripe-credit-ledger-kit-0.2.0.zip`. You may not redistribute, resell, or republish the kit (or a substantial portion of it) as a competing starter, boilerplate, template, theme, or course, and you may not offer a download whose purpose is to give third parties this kit. The sold 0.2.0 zip uses this fence for the whole tree, including `src/billing` and the free chapter. The public license is not MIT. No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome. Full text: `LICENSE` and `docs/COMMERCIAL_GRANT.md`.
+Commercial production use requires a paid Credit Ledger commercial grant for Credit Ledger (Stripe credit ledger kit): one organization, perpetual for the named tag delivered with that purchase. Current SKU: $79 once (Polar product `93a844f7-d48e-414f-ac0c-adf905ffef46`), tag `v0.2.0`, file `stripe-credit-ledger-kit-0.2.0.zip`. You may not redistribute, resell, or republish the kit (or a substantial portion of it) as a competing starter, boilerplate, template, theme, or course, and you may not offer a download whose purpose is to give third parties this kit. The sold 0.2.0 zip uses this fence for the whole tree, including `src/billing` and the free chapter. The public license is not MIT. No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome. Full text: `LICENSE` and `docs/COMMERCIAL_GRANT.md`.
 
 The prior sold zip `v0.1.2` uses this same fence and is withdrawn from the shelf. Anyone who already bought it keeps the rights for that zip. It is not resealed. Tags `v0.1.0` and `v0.1.1` shipped with a narrower carve-out and are not resealed. They are grandfathered history, not the current Polar file. See `docs/COMMERCIAL_GRANT.md` (prior distributions) and `CHANGELOG.md`.
 
