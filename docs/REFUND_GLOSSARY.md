@@ -14,7 +14,7 @@ The listing text is [POLAR_DELIVERABLES.md](POLAR_DELIVERABLES.md). The written 
 
 In that same database transaction the kit releases that user's open holds, then debits the spendable balance. One `clawback` row is written per payment intent. A later reaper pass cannot put those released credits back.
 
-The user is paused if that clawback released any open hold, or if the spendable balance could not cover the full pack. A `shortfall` row (`kind = shortfall`, delta 0) is journaled only when credits are actually missing. `reserve` and `track` then return `account_paused`.
+The user is paused only when spendable cannot cover the full pack after open holds are released. Releasing a hold does not pause by itself when the balance covers the pack. A `shortfall` row (`kind = shortfall`, delta 0) is journaled only when credits are actually missing. `reserve` and `track` then return `account_paused`.
 
 A new grant does **not** clear the pause. You call `unpauseUser` from your admin path. Demo reset is not that path.
 
@@ -24,7 +24,7 @@ These are the shipped rules. They are not open bugs.
 
 | Situation | What the kit does |
 |---|---|
-| Refund or dispute for a payment intent that has no grant yet | HTTP 200, event stored, `ignored_unknown_payment_intent`. Stripe stops. A grant that arrives later is **not** clawed back by this event. |
+| Refund or dispute for a payment intent that has no grant yet | HTTP 200, event stored, `pending_clawback`. Stripe stops. The matching grant applies that clawback in the same transaction. |
 | Partial refund | Full-pack clawback. Proration is not implemented. |
 | `charge.dispute.closed` (you won) | Stored as `ignored_event`. Credits are not returned. There is no dispute state machine. |
 | Second refund or dispute for the same payment intent | `already_clawed_back`. No second debit. |

@@ -11,11 +11,17 @@
  *   Released, finalized, and expired holds return an error (they are not a free retry).
  * - Idempotency is (user_id, idempotency_key).
  * - Held rows older than the TTL are expired: status expired, an expire journal
- *   row, and the credits returned. Call reapExpiredHolds on a timer; reserve()
- *   also calls it so a crash does not black-hole credits forever.
- * - This file does not bill partial token usage.
+ *   row, and the credits returned. Production must run `npm run holds:reap`.
+ *   reserve() also calls reapExpiredHolds opportunistically. That call is not
+ *   the production reaper. track() does not reap.
+ * - This file does not bill partial token usage. finalize is an audit row.
+ * - Clawback pauses only when spendable cannot cover the pack after open holds
+ *   are released. Releasing a hold does not pause by itself.
+ * - A clawback that arrives before its grant is a pending_clawbacks row, applied
+ *   in the grant transaction. A won dispute does not restore credits.
  */
 import { randomUUID } from "node:crypto";
+import { databaseDialect } from "./db";
 import { LedgerError } from "./errors";
 import type {
   Db,
@@ -100,6 +106,19 @@ function assertIdempotencyKey(key: string): void {
   if (typeof key !== "string" || key.trim() === "" || key.length > 200) {
     throw new LedgerError("invalid_idempotency_key");
   }
+}
+
+function assertPaymentIntentId(paymentIntentId: string): void {
+  if (typeof paymentIntentId !== "string" || paymentIntentId.trim() === "" || paymentIntentId.length > 200) {
+    throw new LedgerError("invalid_payment_intent");
+  }
+}
+
+/** Empty strings must not occupy a unique index while NULL rows stay unlimited. */
+function blankToNull(value: string | null | undefined): string | null {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim();
+  return trimmed === "" ? null : value;
 }
 
 function assertPositiveInt(amount: number): void {
@@ -199,6 +218,20 @@ async function insertEntry(
   },
 ): Promise<string> {
   const id = entry.id ?? randomUUID();
+  const idempotencyKey = blankToNull(entry.idempotencyKey);
+  const stripeEventId = blankToNull(entry.stripeEventId);
+  const checkoutSessionId = blankToNull(entry.checkoutSessionId);
+  const paymentIntentId = blankToNull(entry.paymentIntentId);
+  const chargeId = blankToNull(entry.chargeId);
+  if (
+    (entry.kind === "grant" || entry.kind === "reserve" || entry.kind === "track") &&
+    idempotencyKey === null
+  ) {
+    throw new LedgerError("invalid_idempotency_key");
+  }
+  if (entry.kind === "clawback" && paymentIntentId === null) {
+    throw new LedgerError("invalid_payment_intent");
+  }
   await tx.run(
     `INSERT INTO credit_ledger_entries
       (id, user_id, delta, kind, status, idempotency_key, stripe_event_id, checkout_session_id, payment_intent_id, charge_id, pack_id, note, livemode, created_at, seq)
@@ -209,11 +242,11 @@ async function insertEntry(
       entry.delta,
       entry.kind,
       entry.status,
-      entry.idempotencyKey,
-      entry.stripeEventId,
-      entry.checkoutSessionId,
-      entry.paymentIntentId,
-      entry.chargeId ?? null,
+      idempotencyKey,
+      stripeEventId,
+      checkoutSessionId,
+      paymentIntentId,
+      chargeId,
       entry.packId,
       entry.note,
       entry.livemode === null ? null : entry.livemode ? 1 : 0,
@@ -246,32 +279,59 @@ function finishedReserveError(status: string): ReserveFailure["error"] {
   return "idempotency_key_reused";
 }
 
-async function grantReplay(tx: Executor, input: GrantInput): Promise<boolean> {
-  const byKey = await tx.get<{ id: string }>(
-    `SELECT id FROM credit_ledger_entries
-     WHERE user_id = ? AND idempotency_key = ? AND kind = 'grant'`,
+async function grantReplay(tx: Executor, input: GrantInput): Promise<"replay" | "key_reused" | null> {
+  const byKey = await tx.get<{ id: string; kind: string }>(
+    `SELECT id, kind FROM credit_ledger_entries
+     WHERE user_id = ? AND idempotency_key = ?`,
     [input.userId, input.idempotencyKey],
   );
-  if (byKey) return true;
-  if (input.stripeEventId) {
+  if (byKey) return byKey.kind === "grant" ? "replay" : "key_reused";
+  const stripeEventId = blankToNull(input.stripeEventId);
+  if (stripeEventId) {
     const byEvent = await tx.get<{ id: string }>(
       `SELECT id FROM credit_ledger_entries WHERE stripe_event_id = ?`,
-      [input.stripeEventId],
+      [stripeEventId],
     );
-    if (byEvent) return true;
+    if (byEvent) return "replay";
   }
-  if (input.checkoutSessionId) {
+  const checkoutSessionId = blankToNull(input.checkoutSessionId);
+  if (checkoutSessionId) {
     const bySession = await tx.get<{ id: string }>(
       `SELECT id FROM credit_ledger_entries WHERE checkout_session_id = ?`,
-      [input.checkoutSessionId],
+      [checkoutSessionId],
     );
-    if (bySession) return true;
+    if (bySession) return "replay";
   }
-  return false;
+  const paymentIntentId = blankToNull(input.paymentIntentId);
+  if (paymentIntentId) {
+    const byPayment = await tx.get<{ id: string }>(
+      `SELECT id FROM credit_ledger_entries WHERE kind = 'grant' AND payment_intent_id = ?`,
+      [paymentIntentId],
+    );
+    if (byPayment) return "replay";
+  }
+  const chargeId = blankToNull(input.chargeId);
+  if (chargeId) {
+    const byCharge = await tx.get<{ id: string }>(
+      `SELECT id FROM credit_ledger_entries WHERE kind = 'grant' AND charge_id = ?`,
+      [chargeId],
+    );
+    if (byCharge) return "replay";
+  }
+  return null;
 }
 
+export type GrantResult = {
+  balance: number;
+  replay: boolean;
+  /** Set when a pending clawback matched this grant and was applied in this transaction. */
+  clawedBack?: number;
+  shortfall?: number;
+  paused?: boolean;
+};
+
 /** Grant inside an existing transaction (webhook path). Does not clear pause. */
-export async function applyGrant(tx: Executor, input: GrantInput): Promise<{ balance: number; replay: boolean }> {
+export async function applyGrant(tx: Executor, input: GrantInput): Promise<GrantResult> {
   assertUserId(input.userId);
   assertPositiveInt(input.credits);
   assertIdempotencyKey(input.idempotencyKey);
@@ -279,7 +339,9 @@ export async function applyGrant(tx: Executor, input: GrantInput): Promise<{ bal
     throw new LedgerError("invalid_pack");
   }
   await lockBalanceRow(tx, input.userId);
-  if (await grantReplay(tx, input)) {
+  const replay = await grantReplay(tx, input);
+  if (replay === "key_reused") throw new LedgerError("idempotency_key_reused");
+  if (replay === "replay") {
     return { balance: await balanceOf(tx, input.userId), replay: true };
   }
   await creditBalance(tx, input.userId, input.credits);
@@ -297,10 +359,25 @@ export async function applyGrant(tx: Executor, input: GrantInput): Promise<{ bal
     note: input.note ?? null,
     livemode: input.livemode ?? null,
   });
-  return { balance: await balanceOf(tx, input.userId), replay: false };
+  const claw = await consumePendingClawback(tx, {
+    userId: input.userId,
+    credits: input.credits,
+    paymentIntentId: input.paymentIntentId ?? null,
+    chargeId: input.chargeId ?? null,
+    checkoutSessionId: input.checkoutSessionId ?? null,
+  });
+  const balance = await balanceOf(tx, input.userId);
+  if (!claw) return { balance, replay: false };
+  return {
+    balance,
+    replay: false,
+    clawedBack: claw.clawedBack,
+    shortfall: claw.shortfall,
+    paused: claw.paused,
+  };
 }
 
-export async function grantCredits(db: Db, input: GrantInput): Promise<{ balance: number; replay: boolean }> {
+export async function grantCredits(db: Db, input: GrantInput): Promise<GrantResult> {
   return db.transaction((tx) => applyGrant(tx, input));
 }
 
@@ -373,15 +450,17 @@ export type ClawbackResult = {
  * Close every open hold for the user, then remove up to `credits` from the
  * spendable balance. Holds are released in this transaction so a later reaper
  * pass cannot put refunded credits back. If the user already finalized or
- * tracked part of the grant, take what is left, journal the shortfall, and pause.
- * Closing a hold also pauses: that work may already be in flight. A later grant
- * does not clear the pause. Call unpauseUser from a demo or admin path.
- * One clawback row per payment intent.
+ * tracked part of the grant, take what is left and journal the shortfall.
+ * Pause only when that shortfall is greater than zero. Releasing a hold does
+ * not pause when the balance still covers the pack. A later grant does not
+ * clear an existing pause. Call unpauseUser from a demo or admin path.
+ * One clawback row per payment intent. A blank payment intent is rejected.
  */
 export async function applyClawback(tx: Executor, input: ClawbackInput): Promise<ClawbackResult> {
   assertUserId(input.userId);
   assertPositiveInt(input.credits);
   assertIdempotencyKey(input.stripeEventId);
+  assertPaymentIntentId(input.paymentIntentId);
   await lockBalanceRow(tx, input.userId);
   const existing = await tx.get<{ id: string }>(
     `SELECT id FROM credit_ledger_entries
@@ -402,7 +481,7 @@ export async function applyClawback(tx: Executor, input: ClawbackInput): Promise
     };
   }
 
-  const holdsReleased = await releaseHeldForClawback(tx, input.userId);
+  await releaseHeldForClawback(tx, input.userId);
   const balance = await balanceOf(tx, input.userId);
   const clawedBack = Math.min(balance, input.credits);
   const shortfall = input.credits - clawedBack;
@@ -446,7 +525,7 @@ export async function applyClawback(tx: Executor, input: ClawbackInput): Promise
       livemode: null,
     });
   }
-  const shouldPause = shortfall > 0 || holdsReleased > 0;
+  const shouldPause = shortfall > 0;
   if (shouldPause) {
     await tx.run(`UPDATE credit_balances SET paused = 1, updated_at = ? WHERE user_id = ?`, [
       isoNow(),
@@ -465,6 +544,159 @@ export async function applyClawback(tx: Executor, input: ClawbackInput): Promise
     paused,
     replay: false,
   };
+}
+
+type PendingRow = {
+  id: string;
+  payment_intent_id: string | null;
+  charge_id: string | null;
+  checkout_session_id: string | null;
+  stripe_event_id: string;
+  note: string | null;
+};
+
+function pendingIdentity(ids: {
+  paymentIntentId: string | null;
+  chargeId: string | null;
+  checkoutSessionId: string | null;
+}): {
+  paymentIntentId: string | null;
+  chargeId: string | null;
+  checkoutSessionId: string | null;
+  matchSql: string;
+  params: readonly string[];
+} {
+  const paymentIntentId = blankToNull(ids.paymentIntentId);
+  const chargeId = blankToNull(ids.chargeId);
+  const checkoutSessionId = blankToNull(ids.checkoutSessionId);
+  const clauses: string[] = [];
+  const params: string[] = [];
+  if (paymentIntentId) {
+    clauses.push("payment_intent_id = ?");
+    params.push(paymentIntentId);
+  }
+  if (chargeId) {
+    clauses.push("charge_id = ?");
+    params.push(chargeId);
+  }
+  if (checkoutSessionId) {
+    clauses.push("checkout_session_id = ?");
+    params.push(checkoutSessionId);
+  }
+  const matchSql =
+    clauses.length === 0
+      ? ""
+      : `SELECT id, payment_intent_id, charge_id, checkout_session_id, stripe_event_id, note
+         FROM pending_clawbacks
+         WHERE ${clauses.join(" OR ")}`;
+  return { paymentIntentId, chargeId, checkoutSessionId, matchSql, params };
+}
+
+async function backfillPending(
+  tx: Executor,
+  id: string,
+  ids: { paymentIntentId: string | null; chargeId: string | null; checkoutSessionId: string | null },
+): Promise<void> {
+  const sets: Array<[string, string]> = [
+    ["payment_intent_id", ids.paymentIntentId ?? ""],
+    ["charge_id", ids.chargeId ?? ""],
+    ["checkout_session_id", ids.checkoutSessionId ?? ""],
+  ];
+  for (const [column, value] of sets) {
+    if (!value) continue;
+    await tx.run(
+      `UPDATE pending_clawbacks
+       SET ${column} = ?
+       WHERE id = ? AND ${column} IS NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM pending_clawbacks AS other
+           WHERE other.${column} = ? AND other.id <> ?
+         )`,
+      [value, id, value, id],
+    );
+  }
+}
+
+export type PendingClawbackWrite = "inserted" | "exists" | "unkeyed";
+
+/** Store a clawback that beat its grant. HTTP 200. The grant transaction applies it. */
+export async function recordPendingClawback(
+  tx: Executor,
+  input: {
+    paymentIntentId: string | null;
+    chargeId: string | null;
+    checkoutSessionId: string | null;
+    stripeEventId: string;
+    note: string;
+  },
+): Promise<PendingClawbackWrite> {
+  assertIdempotencyKey(input.stripeEventId);
+  const ids = pendingIdentity(input);
+  if (!ids.matchSql) return "unkeyed";
+  const existing = await tx.get<PendingRow>(`${ids.matchSql} LIMIT 1`, ids.params);
+  if (existing) {
+    await backfillPending(tx, existing.id, ids);
+    return "exists";
+  }
+  const inserted = await tx.get<{ id: string }>(
+    `INSERT INTO pending_clawbacks
+       (id, payment_intent_id, charge_id, checkout_session_id, stripe_event_id, note, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT DO NOTHING
+     RETURNING id`,
+    [
+      randomUUID(),
+      ids.paymentIntentId,
+      ids.chargeId,
+      ids.checkoutSessionId,
+      input.stripeEventId.trim(),
+      input.note,
+      isoNow(),
+    ],
+  );
+  return inserted ? "inserted" : "exists";
+}
+
+function chargeIdentity(chargeId: string | null | undefined): string | null {
+  const charge = blankToNull(chargeId);
+  return charge ? `charge:${charge}` : null;
+}
+
+/** Apply and delete pending clawbacks that match this grant. Same transaction as the grant. */
+async function consumePendingClawback(
+  tx: Executor,
+  input: {
+    userId: string;
+    credits: number;
+    paymentIntentId: string | null;
+    chargeId: string | null;
+    checkoutSessionId: string | null;
+  },
+): Promise<ClawbackResult | null> {
+  const ids = pendingIdentity(input);
+  if (!ids.matchSql) return null;
+  const rows = await tx.all<PendingRow>(ids.matchSql, ids.params);
+  if (rows.length === 0) return null;
+  const storedPayment = rows
+    .map((row) => blankToNull(row.payment_intent_id))
+    .find((value): value is string => value !== null);
+  const storedCharge = rows
+    .map((row) => blankToNull(row.charge_id))
+    .find((value): value is string => value !== null);
+  const paymentIntentId =
+    ids.paymentIntentId ?? storedPayment ?? chargeIdentity(ids.chargeId) ?? chargeIdentity(storedCharge);
+  if (!paymentIntentId) return null;
+  const result = await applyClawback(tx, {
+    userId: input.userId,
+    credits: input.credits,
+    paymentIntentId,
+    stripeEventId: rows[0].stripe_event_id,
+    note: rows[0].note ?? "pending clawback",
+  });
+  for (const row of rows) {
+    await tx.run(`DELETE FROM pending_clawbacks WHERE id = ?`, [row.id]);
+  }
+  return result;
 }
 
 export async function getBalance(db: Db, userId: string): Promise<number> {
@@ -854,6 +1086,11 @@ async function expireOne(tx: Executor, reservationId: string, cutoff: string): P
 /**
  * Return credits for holds older than the TTL. Safe to call often.
  * One call processes up to 200 holds; call again if you expect more.
+ *
+ * Production must run `npm run holds:reap`. Postgres locks the batch with
+ * FOR UPDATE SKIP LOCKED so two reapers do not claim the same hold. SQLite
+ * has no SKIP LOCKED; each hold is claimed with UPDATE ... WHERE status = 'held',
+ * and only the process that changes the row returns the credits.
  */
 export async function reapExpiredHolds(
   db: Db,
@@ -862,6 +1099,25 @@ export async function reapExpiredHolds(
   const now = options?.now ?? new Date();
   const ttl = options?.ttlSeconds ?? holdTtlSeconds();
   const cutoff = new Date(now.getTime() - ttl * 1000).toISOString();
+  if ((await databaseDialect(db)) === "postgres") {
+    const expired = await db.transaction(async (tx) => {
+      const rows = await tx.all<{ id: string }>(
+        `SELECT id FROM credit_ledger_entries
+         WHERE kind = 'reserve' AND status = 'held' AND created_at <= ?
+         ORDER BY created_at ASC
+         LIMIT ?
+         FOR UPDATE SKIP LOCKED`,
+        [cutoff, REAPER_BATCH],
+      );
+      let count = 0;
+      for (const row of rows) {
+        if (await expireOne(tx, row.id, cutoff)) count += 1;
+      }
+      return count;
+    });
+    return { expired };
+  }
+
   const rows = await db.all<{ id: string }>(
     `SELECT id FROM credit_ledger_entries
      WHERE kind = 'reserve' AND status = 'held' AND created_at <= ?

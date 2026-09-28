@@ -48,15 +48,15 @@ The status contract: bad signature, missing or placeholder secret, or livemode m
 
 **What you see:** Balance dropped after `reserve`, the process died before `finalize` or `release`, and the credits stay gone.
 
-**Why:** A hold stays `held` until `reapExpiredHolds` runs after the TTL (`CREDIT_HOLD_TTL_SECONDS`, default 900). The demo server does that once, on the first request that opens the database. `reserve` does it again before each reservation. `track` does not. One pass expires at most 200 holds. If the process is down and nothing calls `reserve` or the reaper, the credits stay held.
+**Why:** A hold stays `held` until `reapExpiredHolds` runs after the TTL (`CREDIT_HOLD_TTL_SECONDS`, default 900). Production must run `npm run holds:reap`. The demo server reaps once, on the first request that opens the database. `reserve` reaps again before each reservation. Those calls are not the production reaper. `track` does not reap. One pass expires at most 200 holds. If the process is down and the reaper is not running, the credits stay held.
 
 **Do this:** In production, run `npm run holds:reap` (sleeps `CREDIT_HOLD_REAP_INTERVAL_SECONDS`, default 60) or cron `npm run holds:reap -- --once`. You own that process and you alert if it dies. Do not treat a later `reserve` from unrelated traffic as your reaper. An expired key stays consumed (`hold_expired`). Start a new idempotency key for a new call.
 
 ## 7. Refund or dispute removed a whole pack
 
-**What you see:** A partial refund, or a dispute, took the full pack. Winning the dispute did not put credits back. Or a refund that arrived before the grant never clawed the later grant.
+**What you see:** A partial refund, or a dispute, took the full pack. Winning the dispute did not put credits back.
 
-**Why:** `charge.refunded` and `charge.dispute.created` claw back the full pack for that payment intent, not a prorated amount. `charge.dispute.closed` is stored as `ignored_event` and does not restore credits. A refund for a payment intent with no grant is HTTP 200 `ignored_unknown_payment_intent` and is not applied when the grant shows up later.
+**Why:** `charge.refunded` and `charge.dispute.created` claw back the full pack for that payment intent, not a prorated amount. `charge.dispute.closed` is stored as `ignored_event` and does not restore credits. A refund that arrives before the grant is HTTP 200 `pending_clawback` and is applied when that grant arrives.
 
 **Do this:** Read [REFUND_GLOSSARY.md](REFUND_GLOSSARY.md). This is your customer's Stripe charge, not a refund of the kit purchase. Customer-comms and whether the account should be unpaused are yours.
 
@@ -64,6 +64,6 @@ The status contract: bad signature, missing or placeholder secret, or livemode m
 
 **What you see:** `reserve` or `track` returns `account_paused`. Buying another pack does not clear it.
 
-**Why:** Clawback pauses the user if it released any open hold, or if the spendable balance could not cover the full pack. A `shortfall` journal row (delta 0) is written only when credits are actually missing. Grants do not call `unpauseUser`.
+**Why:** Clawback pauses the user only when the spendable balance could not cover the full pack after open holds were released. A `shortfall` journal row (delta 0) is written only when credits are actually missing. Grants do not call `unpauseUser`.
 
 **Do this:** Call `unpauseUser` from your own admin auth after you decide the account is whole. The demo reset button does this for `DEMO_USER_ID` only. It is not a production admin panel.

@@ -9,10 +9,14 @@ export type CreditPack = {
 };
 
 /**
- * One-time Checkout packs. Edit prices and sizes here.
+ * One-time Checkout packs. Edit sizes here.
+ * Changing price (amountCents) or currency requires a new packId.
+ * Do not change price or currency on an existing packId in place.
  * The webhook grants pack.credits when metadata.packId matches one of these,
  * session.amount_total equals amountCents, and currency matches.
- * metadata.credits is not authority.
+ * The catalog plus amount_total and currency are the grant authority.
+ * A mismatch rolls the grant back. metadata.credits is not authority.
+ * This file does not store a frozen pack snapshot.
  */
 export const PACKS: readonly CreditPack[] = [
   {

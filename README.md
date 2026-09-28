@@ -6,7 +6,7 @@ Buy a credit pack in Stripe Checkout → webhook grants a balance → `check` / 
 
 yellowgram sells the kit on Polar. Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
 
-Version **0.1.2**. Polar delivers `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). Buyers of that zip get PolyForm Noncommercial 1.0.0 plus a Suthirth Commercial Grant. The public license is not MIT. Price is **$79 once**, with **no money-back window**. Soft-WTP stays off. Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). Ledger behavior matches 0.1.0 and 0.1.1. Those earlier zips are grandfathered history ([docs/CHECKSUMS.md](docs/CHECKSUMS.md)). Changes: [CHANGELOG.md](CHANGELOG.md).
+Source version **0.2.0** (`package.json`). Polar still delivers `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). That zip is not resealed. Buyers of that zip get PolyForm Noncommercial 1.0.0 plus a Suthirth Commercial Grant. The public license is not MIT. Price is **$79 once**, with **no money-back window**. Soft-WTP stays off. Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). Tags `v0.1.0` and `v0.1.1`, and the sold `v0.1.2` zip, stay as shipped ([docs/CHECKSUMS.md](docs/CHECKSUMS.md)). Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Use Autumn or Metronome instead when…
 
@@ -139,7 +139,7 @@ See `.env.example`.
 | `CREDIT_HOLD_REAP_INTERVAL_SECONDS` | Optional | Sleep between passes of `npm run holds:reap`. Default `60`. |
 | `STRIPE_EXPECT_LIVEMODE` | Optional | `true` or `false` overrides the key prefix. Unset: `sk_live_` expects live events; every other key expects test events. |
 
-The app creates tables on boot (`ensureSchema`). It seeds the demo user (`seed:<userId>`) only when `ALLOW_DEMO_CONTROLS=true`. `npm run db:migrate` follows the same rule.
+The app creates tables on boot (`ensureSchema`, which runs the versioned migrations). It seeds the demo user (`seed:<userId>`) only when `ALLOW_DEMO_CONTROLS=true`. `npm run db:migrate` is the buyer path and runs those same migrations.
 
 ## Flows
 
@@ -160,7 +160,7 @@ The app creates tables on boot (`ensureSchema`). It seeds the demo user (`seed:<
 
 ### 3. Reserve, then finalize or release
 
-Default policy: **bill the reserved amount**. Credits leave the balance at reserve time. `finalize` writes an audit row and does not change the balance. `release` puts the full reservation back. Partial token billing is not implemented; change `finalize` if you need it.
+Default policy: **bill the reserved amount**. Credits leave the balance at reserve time. `finalize` writes an audit row and does not change the balance. It does not accept a lesser actual-use amount. `release` puts the full reservation back. Partial token billing is not implemented.
 
 ```ts
 const reserved = await reserve(db, { userId, amount: 10, idempotencyKey });
@@ -200,15 +200,19 @@ A successful call finalizes. Releasing a finalized reservation returns `already_
 
 ## Hold TTL and the reaper
 
-A crash after `reserve` and before `finalize` or `release` would otherwise leave credits held forever. Holds older than `CREDIT_HOLD_TTL_SECONDS` (default **900**, fifteen minutes) are expired: status becomes `expired`, an `expire` journal row is appended, and the reserved credits return to the balance.
-
-`reserve` calls `reapExpiredHolds` first, and the demo process calls it on boot. In production run a loop about every 60 seconds:
+Production **must** run:
 
 ```bash
 npm run holds:reap
 ```
 
-That is `scripts/reap-holds.ts`. `CREDIT_HOLD_REAP_INTERVAL_SECONDS` defaults to 60. `npm run holds:reap -- --once` expires one batch and exits. One call expires at most 200 holds; the loop calls it again. An expired key stays consumed (`hold_expired`). Start a new key for a new call.
+That process is the reaper. A crash after `reserve` and before `finalize` or `release` leaves credits `held` until it runs. Holds older than `CREDIT_HOLD_TTL_SECONDS` (default **900**, fifteen minutes) are expired: status becomes `expired`, an `expire` journal row is appended, and the reserved credits return to the balance.
+
+`npm run holds:reap` is `scripts/reap-holds.ts`. It loops. `CREDIT_HOLD_REAP_INTERVAL_SECONDS` defaults to 60. `npm run holds:reap -- --once` expires one batch and exits. One call expires at most 200 holds. An expired key stays consumed (`hold_expired`). Start a new key for a new call.
+
+`reserve` still calls `reapExpiredHolds` before each reservation, and the demo server calls it once on the first database request. Those calls are opportunistic. They are not the production strategy. `track` does not reap. This kit does not ship a scheduler.
+
+Two reaper processes must not double-expire one hold. Postgres claims a batch with `FOR UPDATE SKIP LOCKED`. SQLite claims each hold with `UPDATE ... WHERE status = 'held'`, so only one process returns the credits.
 
 ## Refunds and disputes
 
@@ -216,11 +220,11 @@ Two words: the kit purchase has **no money-back window**. Below is a **customer*
 
 `charge.refunded` and `charge.dispute.created` claw back the **full pack**, not a prorated cent amount. The payment intent is read from `payment_intent`, then from `charge.payment_intent`, then by a stored charge id or Checkout session id. One `clawback` row is written per payment intent.
 
-Open holds for that user are released in the **same** transaction, then the spendable balance is debited. A later reaper pass cannot put those credits back. If a hold was closed, or the balance cannot cover the grant, the user is paused. A shortfall is journaled (`kind = shortfall`, delta 0) only when credits are actually missing. `reserve` and `track` then return `account_paused`.
+Open holds for that user are released in the **same** transaction, then the spendable balance is debited. A later reaper pass cannot put those credits back. The user is paused only when spendable cannot cover the pack after that release. Releasing a hold does not pause by itself when the balance covers the pack. A shortfall is journaled (`kind = shortfall`, delta 0) only when credits are actually missing. `reserve` and `track` then return `account_paused`.
 
 A new grant does **not** clear the pause. Call `unpauseUser` from your admin path. The demo reset button does that. There is no dispute state machine.
 
-A refund for a payment intent that has no grant row is stored and ignored (`ignored_unknown_payment_intent`, HTTP 200). Stripe does not retry it. If that grant arrives later, this event will not claw it back. A second refund or dispute for the same payment intent is `already_clawed_back`.
+A refund or dispute that arrives before the grant (or with no grant row yet) is stored as a **pending clawback** and returns HTTP 200 (`pending_clawback`) so Stripe stops. When the matching grant arrives, that pending row is applied in the **same** grant transaction. A second refund or dispute for the same payment intent is `already_clawed_back` once the clawback exists, or another `pending_clawback` while the grant is still missing. A payload with no payment intent, charge id, or Checkout session id is `ignored_unknown_payment_intent` (HTTP 200) because nothing can match a later grant.
 
 If a dispute payload has only `charge` and no payment intent, the webhook loads the Charge and uses its payment intent. `charge.dispute.closed` does not give credits back when you win. There is no dispute state machine.
 
@@ -246,7 +250,7 @@ Edit `src/billing/packs.ts`. Three packs ship in the kit:
 | `pack_500` | 500 | $20 |
 | `pack_2000` | 2000 | $60 |
 
-Prices are demo numbers. Change them in `src/billing/packs.ts`. The webhook grants `pack.credits` only when `amount_total` and currency match that row. Checkout uses `price_data` (no Dashboard Price objects required).
+Prices are demo numbers. Change them in `src/billing/packs.ts`. Changing price (`amountCents`) or `currency` requires a **new packId**. Do not change price or currency on an existing packId in place. The webhook grants `pack.credits` only when `amount_total` and currency match that row. A mismatch rolls the grant back. Checkout uses `price_data` (no Dashboard Price objects required). There is no frozen pack snapshot.
 
 ## Tests
 
@@ -261,6 +265,7 @@ npm test
 | `tests/concurrent-race.test.ts` | Two processes, two SQLite connections, one balance of 10. One reserve wins. The demo race helper agrees. |
 | `tests/failed-after-reserve.test.ts` | Provider failure releases. Second release does not refund. Finalize then release does not refund. `track` is at-most-once. |
 | `tests/review-fixes.test.ts` | Fail-closed replay, per-user keys, reaper, refund/dispute clawback, livemode, currency, balance invariant. |
+| `tests/phase-b.test.ts` | Pending clawback then grant, pause only on shortfall, NULL-key rejection, versioned migrate, concurrent reaper. |
 | `tests/webhook-status.test.ts` | Signature and placeholder secret are HTTP 400. Livemode mismatch is HTTP 400. Amount mismatch is HTTP 500. Track requires a client key. Demo controls default off. Checkout origin is `NEXT_PUBLIC_APP_URL`. |
 | `tests/shell-gates.test.ts` | Checkout, check, and track are 404 when the demo flag is off. A matching `x-ledger-secret` or the demo flag opens them. |
 | `tests/postgres-concurrency.test.ts` | Skipped unless `DATABASE_URL` is Postgres. Two-process last-credit race and webhook replay on Postgres. |
@@ -269,7 +274,7 @@ The race test spawns two processes so the decrement is not just serialized on on
 
 ## Copy the billing module
 
-`src/billing` does not import Next.js. Copy the folder. Wire your own user id (from your auth, not from the client body). Keep `ensureSchema` on boot or run the statements in `src/billing/schema.ts` from your migrator.
+`src/billing` does not import Next.js. Copy the folder. Wire your own user id (from your auth, not from the client body). Keep `ensureSchema` on boot or run `npm run db:migrate` (`migrate` in `src/billing/schema.ts`).
 
 You can implement `Db` yourself and still use `ledger.ts`, `types.ts`, and `errors.ts`. Those files are part of this kit. They are not a separate license. Adapters in `src/billing/db.ts`, Checkout, webhook, and catalog are the same license as the rest of the tree: PolyForm Noncommercial 1.0.0, plus a Suthirth Commercial Grant for commercial production. See `LICENSE` and [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md).
 
@@ -292,11 +297,12 @@ Short runbook for the cases below: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTIN
 | Webhook secret missing or still `replace_me` | HTTP 400. |
 | Livemode does not match the Stripe key | HTTP 400. The event id is not stored. Stripe stops. |
 | Database down, amount or currency mismatch | HTTP 500. The `stripe_events` insert rolls back. Stripe retries. |
-| Refund or dispute for an unknown payment intent | HTTP 200, event stored, `ignored_unknown_payment_intent`. Stripe stops. A grant that arrives later is not clawed back by this event. |
+| Refund or dispute before the grant row exists | HTTP 200, event stored, `pending_clawback`. Stripe stops. The matching grant applies that clawback in the same transaction. |
+| Refund or dispute with no payment intent, charge, or session id | HTTP 200, `ignored_unknown_payment_intent`. Nothing was stored to match a later grant. |
 | Retry storm of the same `event.id` | Unique `stripe_events.id`. One grant. |
 | `checkout.session.completed` and `async_payment_succeeded` for one session | Unique `checkout_session_id` on the grant row. One grant. |
 | Unpaid `checkout.session.completed` | Event stored. No grant. The async success event can still grant. |
-| `charge.refunded` or `charge.dispute.created` | Full-pack clawback, including a partial refund. Open holds are released in that transaction, then the balance is debited. A shortfall or a closed hold pauses the user. |
+| `charge.refunded` or `charge.dispute.created` | Full-pack clawback, including a partial refund. Open holds are released in that transaction, then the balance is debited. Pause only when spendable cannot cover the pack. |
 | Checkout, check, or track while the demo flag is off | HTTP 404, unless `x-ledger-secret` matches `LEDGER_API_SECRET`. |
 | Balance too low | `reserve` / `track` return `insufficient_credits`. Demo spend routes use HTTP 402. |
 | Provider error after reserve | `release` returns the credits. |
@@ -310,7 +316,7 @@ Stripe retries non-2xx responses for days. Return 500 only when a retry could su
 
 - `NODE_ENV=production` forces the demo shell closed, including seed, spend, race, reset, and the demo flag. Do not deploy `src/app` as your product.
 - `x-ledger-secret` is not multi-tenant auth. It opens checkout, check, and track only, and it still uses `DEMO_USER_ID`. Copy `src/billing` and pass the user id from your session. Never take `userId` from the JSON body.
-- A refund that arrives before its grant is ignored and will not claw back the later grant.
+- A refund that arrives before its grant is a pending clawback and is applied when the grant arrives.
 - Partial refunds claw back the whole pack. A won dispute does not return credits.
 - Reserve replay matches user, key, and amount. There is no payload hash.
 - The balance column is the spendable number. The journal explains it. It is not an event-sourced ledger.

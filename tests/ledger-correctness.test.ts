@@ -42,7 +42,7 @@ describe("ledger correctness pass", () => {
         note: "charge.refunded",
       }),
     );
-    expect(result).toMatchObject({ clawedBack: 100, shortfall: 0, paused: true, replay: false });
+    expect(result).toMatchObject({ clawedBack: 100, shortfall: 0, paused: false, replay: false });
     expect(await getBalance(ctx.db, "user_1")).toBe(0);
     const breakdown = await balanceBreakdown(ctx.db, "user_1");
     expect(breakdown.balance).toBe(breakdown.expected);

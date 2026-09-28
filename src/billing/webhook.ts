@@ -1,6 +1,6 @@
 import type Stripe from "stripe";
 import { LedgerError } from "./errors";
-import { applyClawback, applyGrant } from "./ledger";
+import { applyClawback, applyGrant, recordPendingClawback } from "./ledger";
 import { getPack } from "./packs";
 import type { Db, Executor } from "./types";
 
@@ -14,7 +14,9 @@ import type { Db, Executor } from "./types";
  *
  * charge.refunded and charge.dispute.created claw back the full grant.
  * Open holds are released in that same transaction, then the balance is debited.
- * A missing grant is stored and ignored (HTTP 200), not retried forever.
+ * Pause only when spendable cannot cover the pack after that release.
+ * A missing grant is stored as a pending clawback (HTTP 200). The later grant
+ * applies it in the same transaction. charge.dispute.closed does not restore credits.
  */
 const SESSION_EVENT_TYPES = new Set([
   "checkout.session.completed",
@@ -54,6 +56,7 @@ export type WebhookResult = {
     | "clawed_back"
     | "already_clawed_back"
     | "ignored_unknown_payment_intent"
+    | "pending_clawback"
     | "invalid_metadata";
   clawedBack?: number;
   shortfall?: number;
@@ -241,6 +244,16 @@ export async function handleStripeEvent(
     if (applied.replay) {
       return { duplicate: false, granted: false, reason: "session_already_granted" };
     }
+    if (applied.clawedBack !== undefined) {
+      return {
+        duplicate: false,
+        granted: true,
+        reason: "clawed_back",
+        clawedBack: applied.clawedBack,
+        shortfall: applied.shortfall,
+        paused: applied.paused,
+      };
+    }
     return { duplicate: false, granted: true };
   });
 }
@@ -305,7 +318,17 @@ async function clawbackEvent(tx: Executor, event: StripeEventInput): Promise<Web
   const ids = clawbackIds(object);
   const grant = await findGrant(tx, ids);
   if (!grant) {
-    return { duplicate: false, granted: false, reason: "ignored_unknown_payment_intent" };
+    const recorded = await recordPendingClawback(tx, {
+      paymentIntentId: ids.paymentIntentId,
+      chargeId: ids.chargeId,
+      checkoutSessionId: ids.sessionId,
+      stripeEventId: event.id,
+      note: event.type,
+    });
+    if (recorded === "unkeyed") {
+      return { duplicate: false, granted: false, reason: "ignored_unknown_payment_intent" };
+    }
+    return { duplicate: false, granted: false, reason: "pending_clawback" };
   }
   const paymentIntentId = grant.payment_intent_id ?? ids.paymentIntentId ?? (ids.chargeId ? `charge:${ids.chargeId}` : null);
   if (!paymentIntentId) {
