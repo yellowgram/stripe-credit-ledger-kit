@@ -6,7 +6,7 @@ Buy a credit pack in Stripe Checkout → webhook grants a balance → `check` / 
 
 yellowgram sells the kit on Polar. Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
 
-Source version **0.2.0** (`package.json`). Polar still delivers `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). That zip is not resealed. Buyers of that zip get PolyForm Noncommercial 1.0.0 plus a Suthirth Commercial Grant. The public license is not MIT. Price is **$79 once**, with **no money-back window**. Soft-WTP stays off. Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). Tags `v0.1.0` and `v0.1.1`, and the sold `v0.1.2` zip, stay as shipped ([docs/CHECKSUMS.md](docs/CHECKSUMS.md)). Changes: [CHANGELOG.md](CHANGELOG.md).
+Source version **0.2.0** (`package.json`). Polar still delivers `stripe-credit-ledger-kit-0.1.2.zip` (tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`). That zip is not resealed. Buyers of that zip get PolyForm Noncommercial 1.0.0 plus a Suthirth Commercial Grant. The public license is not MIT. Price is **$79 once**, with **no money-back window**. Soft-WTP stays off. Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). Tags `v0.1.0` and `v0.1.1`, and the sold `v0.1.2` zip, stay as shipped. GitHub Release `v0.2.0` (`stripe-credit-ledger-kit-0.2.0.zip`, commit `ed435e2`) is the sealed asset for the next shelf-swap. Polar does not deliver it yet. Digests: [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Use Autumn or Metronome instead when…
 
