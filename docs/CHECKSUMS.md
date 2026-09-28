@@ -14,7 +14,7 @@ This file also ships inside the 0.2.0 zip. The packed copy does not contain the 
 | Tag | `v0.2.0` |
 | Commit | `ed435e2` |
 | SHA-256 | `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5` |
-| License | PolyForm Noncommercial 1.0.0 + Suthirth Commercial Grant. The public license is not MIT. |
+| License | PolyForm Noncommercial 1.0.0 + Credit Ledger commercial grant. The public license is not MIT. |
 
 This digest is the GitHub Release asset for tag `v0.2.0` (commit `ed435e2`), also printed in those Release notes. Polar delivers this file. The copy of this file inside the 0.2.0 zip does not contain this hex line. This section points at the Release notes, because a digest stored in the packed bytes would not match the zip. Verify the downloaded file:
 
@@ -32,7 +32,7 @@ The asset is `git archive` of tag `v0.2.0` with prefix `stripe-credit-ledger-kit
 | Tag | `v0.1.2` |
 | Commit | `593a2d1` |
 | SHA-256 | `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832` |
-| License | PolyForm Noncommercial 1.0.0 + Suthirth Commercial Grant. The public license is not MIT. |
+| License | PolyForm Noncommercial 1.0.0 + Credit Ledger commercial grant. The public license is not MIT. |
 
 This digest is the GitHub Release asset for tag `v0.1.2` (commit `593a2d1`), also printed in those Release notes. Polar no longer sells this file. Anyone who already bought it keeps the rights for that zip. Do not reseal it. It is not the current Polar file. The copy of this file inside that zip does not contain this hex line. It points at the Release notes, because a digest stored in the packed bytes would not match the zip. Verify the downloaded file:
 

@@ -1,14 +1,15 @@
-# Suthirth Commercial Grant
+# Credit Ledger commercial grant
 
 **Product:** Credit Ledger  
-**Seller:** Suthirth solutions  
+**Legal seller:** Suthirth Solutions, operating as yellowgram  
+**Public brand:** Credit Ledger · yellowgram  
 **Contact:** hello@yellowgram.dev · https://www.yellowgram.dev  
-**Public license:** PolyForm Noncommercial 1.0.0 (`LICENSE`) — source-available; not OSI open source  
+**Public license:** PolyForm Noncommercial 1.0.0 (`LICENSE`) — source-available; not an OSI-approved license  
 **Soft-WTP:** off (no coupons, no cold invoices)
 
 ## What you buy
 
-A paid Polar purchase of the **Credit Ledger** self-host kit (this repository’s title is Stripe credit ledger kit) grants **one organization** a **Suthirth Commercial Grant** for that kit.
+A paid Polar purchase of the **Credit Ledger** self-host kit (this repository’s title is Stripe credit ledger kit) grants **one organization** a **Credit Ledger commercial grant** for that kit.
 
 | Term | Grant |
 | --- | --- |
@@ -29,7 +30,7 @@ Price for the current kit SKU is **$79 once** (Polar product `93a844f7-d48e-414f
 - Permission to **resell, sublicense, republish, or redistribute** the kit (or a substantial portion) as a competing starter, boilerplate, template, course, or hosted service
 - **Self-host production rights** bundled into any **hosted** SKU (hosted is separate; it does not sell the self-host grant)
 - Permission to run a **competing hosted** offering of Credit Ledger
-- Any OSI “open source” grant; payment does not convert the public PolyForm Noncommercial terms into MIT/Apache/BSD
+- Any OSI-approved “open source” grant; payment does not convert the public PolyForm Noncommercial terms into MIT/Apache/BSD
 
 ## Relationship to `LICENSE`
 
@@ -38,7 +39,7 @@ With this grant, the named organization may use the named tag commercially as ab
 
 ## Prior distributions
 
-Tags and zips already shipped under an older license (for example MIT, or a prior custom commercial license) are **not rewritten**. Rights already granted for those sealed artifacts are not clawed back. New purchases and new tags use this grant + PolyForm Noncommercial fence.
+Tags and zips already shipped under an older license (for example MIT, or a prior custom commercial license, or the prior grant name “Credit Ledger commercial grant”) are **not rewritten**. Rights already granted for those sealed artifacts are not clawed back. New purchases and new tags use this grant + PolyForm Noncommercial fence.
 
 Grandfathered for Credit Ledger (Stripe credit ledger kit). These tags and zips stay sealed. They are not retagged, not repacked, and not given a new digest:
 
