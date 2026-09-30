@@ -4,7 +4,7 @@ Cloneable credit ledger for indie AI SaaS. **Your** Stripe. **Your** database. A
 
 Buy a credit pack in Stripe Checkout → webhook grants a balance → `check` / `reserve` → `finalize` or `release` → a small balance page. This repository is that billing module plus a thin demo shell. It is not a chat app, not a hosted wallet, and not Stripe Credit Grants.
 
-yellowgram sells the kit on Polar. Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
+Polar listing stays LIVE (quiet). www Paid catalog demoted this kit 2026-09-30 — product page https://www.yellowgram.dev/credit-ledger keeps a quiet checkout. Soft-WTP off. Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
 
 Source version **0.2.0** (`package.json`). Polar delivers `stripe-credit-ledger-kit-0.2.0.zip` (tag `v0.2.0`, commit `ed435e2`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`). Buyers of that zip get PolyForm Noncommercial 1.0.0 plus a Credit Ledger commercial grant. The public license is not MIT. Price is **$79 once**, with **no money-back window**. Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). The prior sold zip `v0.1.2`, and tags `v0.1.0` and `v0.1.1`, stay as shipped and are not resealed. They are not the current Polar file. Digests: [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Changes: [CHANGELOG.md](CHANGELOG.md).
 
@@ -353,7 +353,7 @@ The zip Polar sells now is **0.2.0** (`stripe-credit-ledger-kit-0.2.0.zip`). The
 
 No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome.
 
-Contact: hello@yellowgram.dev · https://www.yellowgram.dev/credit-ledger
+Contact / product page (Paid catalog demoted; Polar quiet): hello@yellowgram.dev · https://www.yellowgram.dev/credit-ledger
 
 ## Support
 
