@@ -4,7 +4,7 @@ Cloneable credit ledger for indie AI SaaS. **Your** Stripe. **Your** database. A
 
 Buy a credit pack in Stripe Checkout → webhook grants a balance → `check` / `reserve` → `finalize` or `release` → a small balance page. This repository is that billing module plus a thin demo shell. It is not a chat app, not a hosted wallet, and not Stripe Credit Grants.
 
-Polar listing stays LIVE (quiet). www Paid catalog demoted this kit 2026-09-30 — product page https://www.yellowgram.dev/credit-ledger keeps a quiet checkout. Soft-WTP off. Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
+Polar listing stays LIVE (quiet). www Paid catalog demoted this kit 2026-09-30 — product page https://www.yellowgram.dev/credit-ledger keeps a quiet checkout. Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
 
 Source version **0.2.0** (`package.json`). Polar delivers `stripe-credit-ledger-kit-0.2.0.zip` (tag `v0.2.0`, commit `ed435e2`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`). Buyers of that zip get PolyForm Noncommercial 1.0.0 plus a Credit Ledger commercial grant. The public license is not MIT. Price is **$79 once**, with **no money-back window**. Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). The prior sold zip `v0.1.2`, and tags `v0.1.0` and `v0.1.1`, stay as shipped and are not resealed. They are not the current Polar file. Digests: [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Changes: [CHANGELOG.md](CHANGELOG.md).
 
@@ -45,7 +45,7 @@ Requirements: Node.js 20+.
 
 ```bash
 npm install
-cp .env.example .env.local
+cp.env.example.env.local
 ```
 
 **Postgres (use this for anything you ship).**
@@ -87,14 +87,14 @@ Stripe CLI Checkout is the optional real test payment: Stripe’s hosted page an
 
 1. Install the [Stripe CLI](https://docs.stripe.com/stripe-cli) and `stripe login`.
 2. `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
-3. Copy the CLI `whsec_...` into `STRIPE_WEBHOOK_SECRET`. That secret is not the one in the Dashboard. Restart `npm run dev`.
-4. Put `sk_test_...` in `STRIPE_SECRET_KEY`.
+3. Copy the CLI `whsec_.` into `STRIPE_WEBHOOK_SECRET`. That secret is not the one in the Dashboard. Restart `npm run dev`.
+4. Put `sk_test_.` in `STRIPE_SECRET_KEY`.
 5. Click **Buy** on a pack. Card `4242 4242 4242 4242`, any future expiry, any CVC, any postal code.
 6. The balance increases when `checkout.session.completed` is processed (`payment_status=paid`), not when the success page loads.
 7. Replay the same event. The balance must not move.
 
 ```bash
-stripe events resend evt_...
+stripe events resend evt_.
 ```
 
 Delayed payment methods (no instant capture) grant on `checkout.session.async_payment_succeeded` instead. `payment_intent.succeeded` is stored and ignored so it cannot grant a second time.
@@ -104,8 +104,8 @@ Delayed payment methods (no instant capture) grant on `checkout.session.async_pa
 `npm run demo` already checks grant-once on the migrated database. To post the same kind of signed fixture at the running app, start `npm run dev` and set `STRIPE_WEBHOOK_SECRET` to a real `whsec_` value (generate one with `stripe listen`, or any secret you also put in `.env.local`):
 
 ```bash
-npm run demo:webhook          # signed checkout.session.completed, +100 credits
-npm run demo:webhook -- --replay   # same event id, balance unchanged
+npm run demo:webhook # signed checkout.session.completed, +100 credits
+npm run demo:webhook -- --replay # same event id, balance unchanged
 ```
 
 This posts to `NEXT_PUBLIC_APP_URL` (default `http://localhost:3000`). It does not charge a card. Checkout above is the hosted test payment.
@@ -127,8 +127,8 @@ See `.env.example`.
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `STRIPE_SECRET_KEY` | To open Checkout | `sk_test_...` while you are testing. Never commit a live key. |
-| `STRIPE_WEBHOOK_SECRET` | To accept webhooks | `whsec_...` from `stripe listen` or the Dashboard endpoint. |
+| `STRIPE_SECRET_KEY` | To open Checkout | `sk_test_.` while you are testing. Never commit a live key. |
+| `STRIPE_WEBHOOK_SECRET` | To accept webhooks | `whsec_.` from `stripe listen` or the Dashboard endpoint. |
 | `NEXT_PUBLIC_APP_URL` | Recommended | The only origin for Checkout `success_url` and `cancel_url`. Default `http://localhost:3000`. `x-forwarded-host` is ignored. |
 | `DATABASE_URL` | Production | `postgres://` or `postgresql://`. Wins over SQLite when set. |
 | `SQLITE_PATH` | Dev alternate | File path. Ignored when `DATABASE_URL` is Postgres. |
@@ -165,15 +165,15 @@ Default policy: **bill the reserved amount**. Credits leave the balance at reser
 ```ts
 const reserved = await reserve(db, { userId, amount: 10, idempotencyKey });
 if (!reserved.ok) {
-  // 402 — do not call the model
+ // 402 — do not call the model
 }
 try {
-  const output = await callYourModel();
-  await finalize(db, userId, idempotencyKey);
-  return output;
+ const output = await callYourModel();
+ await finalize(db, userId, idempotencyKey);
+ return output;
 } catch {
-  await release(db, userId, idempotencyKey);
-  throw;
+ await release(db, userId, idempotencyKey);
+ throw;
 }
 ```
 
@@ -212,7 +212,7 @@ That process is the reaper. A crash after `reserve` and before `finalize` or `re
 
 `reserve` still calls `reapExpiredHolds` before each reservation, and the demo server calls it once on the first database request. Those calls are opportunistic. They are not the production strategy. `track` does not reap. This kit does not ship a scheduler.
 
-Two reaper processes must not double-expire one hold. Postgres claims a batch with `FOR UPDATE SKIP LOCKED`. SQLite claims each hold with `UPDATE ... WHERE status = 'held'`, so only one process returns the credits.
+Two reaper processes must not double-expire one hold. Postgres claims a batch with `FOR UPDATE SKIP LOCKED`. SQLite claims each hold with `UPDATE. WHERE status = 'held'`, so only one process returns the credits.
 
 ## Refunds and disputes
 
@@ -308,7 +308,7 @@ Short runbook for the cases below: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTIN
 | Provider error after reserve | `release` returns the credits. |
 | Same key after release, finalize, or expiry | Error. Not `ok: true`. |
 | Hold older than the TTL | Reaper returns the credits. |
-| Two spends of the last credit | One `UPDATE ... WHERE balance >= ?` wins. |
+| Two spends of the last credit | One `UPDATE. WHERE balance >= ?` wins. |
 
 Stripe retries non-2xx responses for days. Return 500 only when a retry could succeed (database blip, bug you are about to fix). Signature failures stay 400 so Stripe stops.
 
@@ -330,13 +330,13 @@ If you run more than one Node process against one SQLite file, expect lock waits
 ## Project layout
 
 ```
-src/billing/     ledger, schema, Checkout, webhook, Postgres + SQLite adapters
-src/app/         demo UI and HTTP routes
-src/demo/        fake LLM and demo reset — not a product
-src/server/      process-wide DB handle and demo user id
-tests/           edge cases
-scripts/         migrate, signed webhook fixture, hold reaper loop
-docs/            free chapter, commercial grant, listing paste, troubleshooting, refund glossary, checksums
+src/billing/ ledger, schema, Checkout, webhook, Postgres + SQLite adapters
+src/app/ demo UI and HTTP routes
+src/demo/ fake LLM and demo reset — not a product
+src/server/ process-wide DB handle and demo user id
+tests/ edge cases
+scripts/ migrate, signed webhook fixture, hold reaper loop
+docs/ free chapter, commercial grant, listing paste, troubleshooting, refund glossary, checksums
 ```
 
 ## Paid delta
