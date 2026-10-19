@@ -8,7 +8,7 @@ Buy a credit pack in Stripe Checkout → webhook grants a balance → `check` / 
 
 Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
 
-MIT licensed and no longer sold. Use it as a GitHub template or clone it. Releases before 0.3.0 (tags `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT. Start at [START_HERE.md](START_HERE.md). Digests of the old zips: [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Changes: [CHANGELOG.md](CHANGELOG.md).
+MIT licensed and no longer sold. Use it as a GitHub template or clone it. Releases before 0.3.0 (tags `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT. Start at [START_HERE.md](START_HERE.md). Digests of the old zips: [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Use Autumn or Metronome instead when…
 
@@ -343,7 +343,7 @@ docs/ free chapter, troubleshooting, refund glossary, checksums
 
 ## License
 
-MIT. Copyright (c) 2026 yellowgram. See [LICENSE](LICENSE). Releases before 0.3.0 (tags `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT.
+MIT. Copyright (c) 2026 yellowgram. See [LICENSE](LICENSE). Releases before 0.3.0 (tags `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT.
 
 No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome.
 
