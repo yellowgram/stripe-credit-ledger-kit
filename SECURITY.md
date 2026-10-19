@@ -2,7 +2,7 @@
 
 ## Private vulnerability reports
 
-Do not open a GitHub Issue with a proof of concept, exploit steps, or a zero-day. Do not paste live Stripe keys, Polar tokens, database URLs, webhook secrets, or customer billing details into Issues, pull requests, or Polar messages.
+Do not open a GitHub Issue with a proof of concept, exploit steps, or a zero-day. Do not paste live Stripe keys, Polar tokens, database URLs, webhook secrets, or customer billing details into Issues, pull requests.
 
 Report privately by email to **hello@yellowgram.dev** with subject `Credit Ledger security`. Prefer a short description and a redacted repro. Do not attach live secrets.
 
@@ -14,6 +14,6 @@ If that page says reporting is turned off, email hello@yellowgram.dev instead. D
 
 ## Support is a different path
 
-[SUPPORT.md](SUPPORT.md) is best-effort support for kit questions within the purchase window. That path is not a penetration-test retainer and not permission to post exploit details while a private report is pending.
+[SUPPORT.md](SUPPORT.md) is best-effort help for kit questions. That path is not a penetration-test retainer and not permission to post exploit details while a private report is pending.
 
-Production correctness is yours. The public [license](LICENSE) is PolyForm Noncommercial 1.0.0 (source-available; OSI-approved license = false) and has no warranty. Commercial production use is the Credit Ledger commercial grant in [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Legal seller: Suthirth Solutions, operating as yellowgram. Contact: hello@yellowgram.dev.
+Production correctness is yours. This kit is MIT licensed ([LICENSE](LICENSE)) and has no warranty. Contact: hello@yellowgram.dev.

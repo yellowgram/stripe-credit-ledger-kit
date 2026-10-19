@@ -1,12 +1,14 @@
 # Stripe credit ledger kit
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Cloneable credit ledger for indie AI SaaS. **Your** Stripe. **Your** database. A real-time hard gate before the expensive call.
 
 Buy a credit pack in Stripe Checkout → webhook grants a balance → `check` / `reserve` → `finalize` or `release` → a small balance page. This repository is that billing module plus a thin demo shell. It is not a chat app, not a hosted wallet, and not Stripe Credit Grants.
 
-Polar listing stays LIVE (quiet). www Paid catalog demoted this kit 2026-09-30 — product page https://www.yellowgram.dev/credit-ledger keeps a quiet checkout. Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
+Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
 
-Source version **0.2.0** (`package.json`). Polar delivers `stripe-credit-ledger-kit-0.2.0.zip` (tag `v0.2.0`, commit `ed435e2`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`). Buyers of that zip get PolyForm Noncommercial 1.0.0 plus a Credit Ledger commercial grant. The public license is not MIT. Price is **$79 once**, with **no money-back window**. Unzipped from Polar? Start at [BUYER_START_HERE.md](BUYER_START_HERE.md). The prior sold zip `v0.1.2`, and tags `v0.1.0` and `v0.1.1`, stay as shipped and are not resealed. They are not the current Polar file. Digests: [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Changes: [CHANGELOG.md](CHANGELOG.md).
+MIT licensed and no longer sold. Use it as a GitHub template or clone it. Releases before 0.3.0 (tags `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT. Start at [START_HERE.md](START_HERE.md). Digests of the old zips: [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Use Autumn or Metronome instead when…
 
@@ -73,7 +75,7 @@ npm run demo
 
 `npm run demo` is the sealed fixture smoke. It signs a local `checkout.session.completed` for `pack_100`, grants those **100** credits to `DEMO_USER_ID` on the database you just migrated (`DATABASE_URL` when it is Postgres, otherwise `SQLITE_PATH`), then delivers that same event id again. The first delivery grants. The replay leaves the balance where it is. The signature is checked in-process with a built-in fixture secret. There is no Stripe API call and no card charge. Each run uses a new event id, so a second `npm run demo` grants another 100. The dev server does not need to be running.
 
-The kit purchase is **$79 once** and has **no money-back window**. This command does not send a customer `charge.refunded` (that event is a full-pack clawback inside the ledger). See [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
+This command does not send a customer `charge.refunded` (that event is a full-pack clawback inside the ledger). See [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
 
 ```bash
 npm run dev
@@ -216,7 +218,7 @@ Two reaper processes must not double-expire one hold. Postgres claims a batch wi
 
 ## Refunds and disputes
 
-Two words: the kit purchase has **no money-back window**. Below is a **customer** Stripe refund or dispute. See [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
+This section is about a **customer** Stripe refund or dispute on your account. See [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
 
 `charge.refunded` and `charge.dispute.created` claw back the **full pack**, not a prorated cent amount. The payment intent is read from `payment_intent`, then from `charge.payment_intent`, then by a stored charge id or Checkout session id. One `clawback` row is written per payment intent.
 
@@ -276,7 +278,7 @@ The race test spawns two processes so the decrement is not just serialized on on
 
 `src/billing` does not import Next.js. Copy the folder. Wire your own user id (from your auth, not from the client body). Keep `ensureSchema` on boot or run `npm run db:migrate` (`migrate` in `src/billing/schema.ts`).
 
-You can implement `Db` yourself and still use `ledger.ts`, `types.ts`, and `errors.ts`. Those files are part of this kit. They are not a separate license. Adapters in `src/billing/db.ts`, Checkout, webhook, and catalog are the same license as the rest of the tree: PolyForm Noncommercial 1.0.0, plus a Credit Ledger commercial grant for commercial production. See `LICENSE` and [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md).
+You can implement `Db` yourself and still use `ledger.ts`, `types.ts`, and `errors.ts`. The whole tree, including adapters in `src/billing/db.ts`, Checkout, webhook, and catalog, is MIT. See `LICENSE`.
 
 Delete the demo shell when it is no longer useful:
 
@@ -336,30 +338,22 @@ src/demo/ fake LLM and demo reset — not a product
 src/server/ process-wide DB handle and demo user id
 tests/ edge cases
 scripts/ migrate, signed webhook fixture, hold reaper loop
-docs/ free chapter, commercial grant, listing paste, troubleshooting, refund glossary, checksums
+docs/ free chapter, troubleshooting, refund glossary, checksums
 ```
-
-## Paid delta
-
-Without a purchase, [LICENSE](LICENSE) is PolyForm Noncommercial 1.0.0 only (source-available; not an OSI-approved license). Paying for Credit Ledger buys the [Credit Ledger commercial grant](docs/COMMERCIAL_GRANT.md) for **one organization** and the **named tag**, plus the Polar zip `stripe-credit-ledger-kit-0.2.0.zip` (SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`). Legal seller: Suthirth Solutions, operating as yellowgram.
 
 ## License
 
-Source-available under the PolyForm Noncommercial License 1.0.0. Claims: source-available = true. OSI open source = false. Copyright (c) 2026 yellowgram. The copyright holder is yellowgram. Seller is Suthirth solutions.
-
-Commercial production use requires a paid **Credit Ledger commercial grant** for **Credit Ledger** (this repository is the Stripe credit ledger kit). One organization. Perpetual for the named tag delivered with that purchase. Current SKU price: **$79 once**. No resale and no republishing this kit, or a substantial portion of it, as a competing starter, boilerplate, template, theme, or course. Terms: [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Public license text: `LICENSE`.
-
-The zip Polar sells now is **0.2.0** (`stripe-credit-ledger-kit-0.2.0.zip`). The whole tree in that zip uses this fence, including `src/billing/ledger.ts`, `types.ts`, `errors.ts`, and the free chapter. There is no separate extract. The prior sold zip `v0.1.2` is withdrawn from the shelf. Anyone who already bought it keeps the rights for that zip. It is not resealed. Tags `v0.1.0` and `v0.1.1`, and their Release zips, are grandfathered history: rights already granted, and those artifacts are not resealed. They are not the current Polar file. What those artifacts granted is in the grant’s prior-distributions section and in [CHANGELOG.md](CHANGELOG.md).
+MIT. Copyright (c) 2026 yellowgram. See [LICENSE](LICENSE). Releases before 0.3.0 (tags `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT.
 
 No warranty. You are responsible for billing correctness in production. Not affiliated with Stripe, Autumn, or Metronome.
 
-Contact / product page (Paid catalog demoted; Polar quiet): hello@yellowgram.dev · https://www.yellowgram.dev/credit-ledger
+Contact: hello@yellowgram.dev
 
 ## Support
 
-GitHub Issues on the public repository `yellowgram/stripe-credit-ledger-kit` for **60 days** from the purchase date. Best-effort, no SLA, capped at about two hours a week. Include the failing test name or a Stripe **test-mode** event id. Do not paste live secret keys, webhook signing secrets, or customer payment details. Contact: hello@yellowgram.dev.
+No support contract and no SLA. Best-effort GitHub Issues on `yellowgram/stripe-credit-ledger-kit`. Include the failing test name or a Stripe **test-mode** event id. Do not paste live secret keys, webhook signing secrets, or customer payment details.
 
-Full boundary and the out-of-scope reply: [SUPPORT.md](SUPPORT.md). Vulnerability reports: [SECURITY.md](SECURITY.md). Purchase refund versus customer clawback: [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
+Details: [SUPPORT.md](SUPPORT.md). Vulnerability reports: [SECURITY.md](SECURITY.md). Customer clawback rules: [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
 
 ## Free chapter
 
@@ -367,3 +361,7 @@ Full boundary and the out-of-scope reply: [SUPPORT.md](SUPPORT.md). Vulnerabilit
 
 
 Status: [docs/STATUS.md](docs/STATUS.md).
+
+---
+
+Part of yellowgram open source tools: https://www.yellowgram.dev/oss

@@ -1,11 +1,5 @@
 # Kit status — Credit Ledger
 
-Updated 2026-09-28. Polar listing is **LIVE** and sells `stripe-credit-ledger-kit-0.2.0.zip`. SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`.
+Updated 2026-10-19. MIT licensed from 0.3.0 and no longer sold. This repository is a template: clone it or use it as a GitHub template. It is not published to npm.
 
-Polar product id `93a844f7-d48e-414f-ac0c-adf905ffef46` (do not rename). Polar organization dashboard **Suthirth solutions** (not renamed this week). Legal seller: Suthirth Solutions, operating as yellowgram.
-
-Buy path: [www.yellowgram.dev/credit-ledger](https://www.yellowgram.dev/credit-ledger). This repository has no Checkout URL.
-
-Soft-WTP stays forbidden (standing answer: no coupons / no cold invoices).
-
-Live attachment re-checked 2026-09-28 (America/New_York): file id `174925e1-a558-41a7-aa2c-f5f3b1b4600e` is `stripe-credit-ledger-kit-0.2.0.zip`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`.
+Releases before 0.3.0 (tags `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT. Their digests are in [CHECKSUMS.md](CHECKSUMS.md).

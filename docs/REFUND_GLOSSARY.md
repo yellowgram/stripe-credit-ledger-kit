@@ -1,16 +1,10 @@
 # Refund glossary
 
-Two different words. Mixing them up makes a ledger clawback look like a broken download, or a download policy look like a customer credit rule.
-
-## Kit purchase (this zip)
-
-The $79 kit has **no money-back window**. Polar delivered a file. That sale is not reversed because a demo failed, because a limit in this glossary surprised you, or because the product is the wrong fit (see the Autumn / Metronome walk-away in the [README](../README.md)).
-
-The listing text is [POLAR_DELIVERABLES.md](POLAR_DELIVERABLES.md). The written policy for the $79 kit is **none**. The sold listing has no money-back window. This file is that policy.
+How customer refunds and disputes on your Stripe account hit the ledger.
 
 ## Customer charge (your Stripe account)
 
-`charge.refunded` and `charge.dispute.created` on **your** Stripe account claw back the **full pack** granted for that payment intent. Not a prorated cent. Not a refund of the kit.
+`charge.refunded` and `charge.dispute.created` on **your** Stripe account claw back the **full pack** granted for that payment intent. Not a prorated cent.
 
 In that same database transaction the kit releases that user's open holds, then debits the spendable balance. One `clawback` row is written per payment intent. A later reaper pass cannot put those released credits back.
 
@@ -32,4 +26,3 @@ These are the shipped rules. They are not open bugs.
 
 Spendable balance after a clawback still follows the [balance invariant](../README.md#balance-invariant): grants minus finalized spends minus held reserves minus clawbacks.
 
-Clawback of a customer pack does not refund the kit. The kit's no-money-back policy does not change how your customers' refunds hit the ledger.

@@ -58,7 +58,7 @@ The status contract: bad signature, missing or placeholder secret, or livemode m
 
 **Why:** `charge.refunded` and `charge.dispute.created` claw back the full pack for that payment intent, not a prorated amount. `charge.dispute.closed` is stored as `ignored_event` and does not restore credits. A refund that arrives before the grant is HTTP 200 `pending_clawback` and is applied when that grant arrives.
 
-**Do this:** Read [REFUND_GLOSSARY.md](REFUND_GLOSSARY.md). This is your customer's Stripe charge, not a refund of the kit purchase. Customer-comms and whether the account should be unpaused are yours.
+**Do this:** Read [REFUND_GLOSSARY.md](REFUND_GLOSSARY.md). This is your customer's Stripe charge. Customer-comms and whether the account should be unpaused are yours.
 
 ## 8. Account paused after a clawback
 

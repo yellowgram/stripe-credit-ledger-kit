@@ -2,21 +2,13 @@
 
 ## Boundary
 
-GitHub Issues on the public repository `yellowgram/stripe-credit-ledger-kit` for **60 days** from the purchase date. Best-effort, no SLA, capped at about two hours a week. No calls, no Slack, and no implementation pairing. Contact: hello@yellowgram.dev.
-
-The public license is PolyForm Noncommercial 1.0.0 in [LICENSE](LICENSE) (source-available; OSI open source = false). Commercial production use is the Credit Ledger commercial grant in [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md), sold by Suthirth solutions. This queue does not renegotiate either document. Copyright holder: yellowgram.
-
-Outside 60 days, the Issue will be closed. There is no perpetual update entitlement with the $79 once zip. Behavior you are on is the tree you bought ([CHANGELOG.md](CHANGELOG.md)).
-
-## Issues access (not Polar messages)
-
-The repository is public and source-available. Open GitHub Issues on `yellowgram/stripe-credit-ledger-kit`. No collaborator invite. Polar chat is not the support queue. Polar messages are not the 60-day queue.
+This kit is MIT-licensed open source ([LICENSE](LICENSE)) and is no longer sold. There is no paid support, no support window, and no SLA. Best-effort GitHub Issues on `yellowgram/stripe-credit-ledger-kit`. No calls, no Slack, and no implementation pairing. Contact: hello@yellowgram.dev.
 
 ## What you must include
 
 Use the bug template (`.github/ISSUE_TEMPLATE/bug_report.yml`). An Issue without this pack is not debuggable:
 
-- Kit semver, git tag, or zip checksum (see [docs/CHECKSUMS.md](docs/CHECKSUMS.md))
+- Kit version (`package.json`) or git commit
 - Node version, OS, and database engine (SQLite or Postgres)
 - A failing `npm test` **test name**, or a Stripe **test-mode** event id (`evt_...`)
 - Redacted env **booleans and prefixes only**
@@ -37,30 +29,25 @@ Start with [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) and [docs/REFUND_G
 
 - Hosted SaaS, a yellowgram-operated wallet, or a managed dashboard
 - Autumn or Metronome feature parity (plans, entitlements, rollovers, dimensional pricing, hosted `check` / `track`)
-- Lock, Audit, or any other SKU that is not this download
-- coupons, waitlist, or outreach programs
 - Implementation services (wiring reserve/finalize into your app, auth, Stripe Dashboard clicks, process supervision)
 - Polar inside the application (SDK, webhooks, customer portal)
 - India-local ICP customization
 - Debugging production live keys
-- Purchase money-back (see [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md))
 
 ## Paste-ready reply
 
-Use this as the close comment. Do not improvise a different policy.
+Use this as the close comment for out-of-scope requests.
 
 ```
-Closing as out of scope for the $79 Stripe credit ledger kit.
+Closing as out of scope for the Stripe credit ledger kit.
 
-This product is the download: copy `src/billing` onto your Stripe account and your database. It is not a hosted wallet, not an Autumn or Metronome control plane (plans, entitlements, rollovers, dimensional pricing), not Lock or Audit, not a coupons or waitlist program, not implementation services, and not Polar inside the app (no Polar SDK, webhooks, or portal). India-local ICP customization is not part of this SKU. Live secret keys are not debugged here.
+This project is a template: copy `src/billing` onto your Stripe account and your database. It is not a hosted wallet, not an Autumn or Metronome control plane (plans, entitlements, rollovers, dimensional pricing), not implementation services, and not Polar inside the app (no Polar SDK, webhooks, or portal). Live secret keys are not debugged here.
 
 If you wanted a control plane, use the README section "Use Autumn or Metronome instead when…" and the free chapter. Do not file that as a bug.
 
-The kit purchase has no money-back window (docs/REFUND_GLOSSARY.md). A customer `charge.refunded` / dispute full-pack clawback is a different word. LICENSE and the Credit Ledger commercial grant are not renegotiated here.
-
-In-scope bugs need the issue template: kit version or checksum, Node, OS, database, a failing test name or a Stripe test-mode event id, and redacted env booleans only. No secrets. Missing repro is closed after 7 days.
+In-scope bugs need the issue template: kit version or commit, Node, OS, database, a failing test name or a Stripe test-mode event id, and redacted env booleans only. No secrets. Missing repro is closed after 7 days.
 ```
 
 ## Also read
 
-[BUYER_START_HERE.md](BUYER_START_HERE.md) · [SECURITY.md](SECURITY.md) · [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) · [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md) · [docs/POLAR_DELIVERABLES.md](docs/POLAR_DELIVERABLES.md)
+[START_HERE.md](START_HERE.md) · [SECURITY.md](SECURITY.md) · [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) · [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md)

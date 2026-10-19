@@ -1,8 +1,13 @@
 # Changelog
 
-The $79 once purchase is the tree you received. There is no perpetual update entitlement. Read this file before you replace a pinned zip. Soft-WTP stays off. This log does not promise a later update SKU.
+Versions here match `package.json`. Entries before 0.3.0 describe releases published under the previous license and are kept as history.
 
-Versions here match `package.json`. The Polar file is tag `v0.2.0`, asset `stripe-credit-ledger-kit-0.2.0.zip`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5` (commit `ed435e2`). That zip stays inside the PolyForm Noncommercial 1.0.0 + Credit Ledger commercial grant fence. The public license is not MIT. `v0.1.2` is the prior sold file, withdrawn from the shelf. Anyone who already bought it keeps the rights for that zip. Do not reseal it. `v0.1.0` and `v0.1.1` remain grandfathered history and are not resealed. Price stays $79 once. No money-back window.
+## 0.3.0 — 2026-10-19
+
+- Relicensed to MIT; no longer sold. `LICENSE` is the MIT License (Copyright (c) 2026 yellowgram). The commercial grant and Polar listing packet were removed (they remain in git history). Price, money-back, and support-window copy is gone from README, START_HERE (was `BUYER_START_HERE.md`), SUPPORT, SECURITY, docs, and issue templates.
+- The kit stays a template: `package.json` keeps `private: true` and is not published to npm. Adds `homepage`, `repository`, `bugs`, and `author`.
+- No ledger, webhook, or schema behavior change.
+- Releases before 0.3.0 were published under the previous license.
 
 ## 0.2.0 — 2026-09-27
 

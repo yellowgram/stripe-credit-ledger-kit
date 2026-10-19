@@ -4,7 +4,7 @@
 **Status:** Public chapter. It ships with the kit and stays public. Do not paywall it.
 **Last updated:** 2026-09-27
 **Not affiliated with** Stripe, Autumn, or Metronome.
-**License:** Same as the sold kit **0.2.0** (`stripe-credit-ledger-kit-0.2.0.zip`): PolyForm Noncommercial 1.0.0, Copyright (c) 2026 yellowgram. Source-available. OSI open source = false. The public license is not MIT. Commercial production use needs a Credit Ledger commercial grant (`docs/COMMERCIAL_GRANT.md`). This file is not a separate license.
+**License:** MIT, same as the kit (`LICENSE`). Copyright (c) 2026 yellowgram.
 
 If you are reading this inside the credit-ledger kit, the manual is the [README](../README.md). This chapter is the map, not the setup guide.
 
@@ -214,7 +214,7 @@ If Path A fits, use Stripe’s docs and stop.
 If Path C fits, talk to Metronome / follow Stripe’s Metronome guides.
 If Path D fits, start on Autumn Free and ship product.
 
-**If Path B fits** — hard real-time gate, owned ledger, Checkout packs, no desire to run a control plane — a tested DIY kit can save you from rediscovering webhook idempotency, race-safe decrements, and failed-LLM release semantics. Credit Ledger (the Stripe credit ledger kit) is that lane. Its terms are the repository `LICENSE` and `docs/COMMERCIAL_GRANT.md`.
+**If Path B fits** — hard real-time gate, owned ledger, Checkout packs, no desire to run a control plane — a tested DIY kit can save you from rediscovering webhook idempotency, race-safe decrements, and failed-LLM release semantics. Credit Ledger (the Stripe credit ledger kit) is that lane. It is MIT licensed (`LICENSE`).
 
 If you would handle the race and idempotency cases yourself, you do not need a kit. If you want owned code and a proven checklist, that is what the kit is for.
 

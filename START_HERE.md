@@ -1,21 +1,14 @@
-# Buyer start here
+# Start here
 
-**Paid delta:** PolyForm Noncommercial 1.0.0 alone does not grant commercial production use. A paid purchase is the [Credit Ledger commercial grant](docs/COMMERCIAL_GRANT.md) for one organization and the named tag. Legal seller: Suthirth Solutions, operating as yellowgram.
+MIT licensed ([LICENSE](LICENSE)). Copyright (c) 2026 yellowgram. Use this repository as a GitHub template or clone it. Security reports: [SECURITY.md](SECURITY.md). Polar is not in the app.
 
-Buy: [www.yellowgram.dev/credit-ledger](https://www.yellowgram.dev/credit-ledger) or hello@yellowgram.dev. This page is not a Checkout link. Security reports: [SECURITY.md](SECURITY.md).
-
-
-Source version **0.2.0** (`package.json`). Polar delivers `stripe-credit-ledger-kit-0.2.0.zip` (tag `v0.2.0`, commit `ed435e2`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`). Polar is not in the app. Verify that zip in [docs/CHECKSUMS.md](docs/CHECKSUMS.md). The prior sold zip `v0.1.2`, and tags `v0.1.0` and `v0.1.1`, stay as shipped. They are not the file Polar sells now. Do not reseal them.
-
-License: source-available under PolyForm Noncommercial 1.0.0. OSI open source = false. The public license is not MIT. Commercial production use needs a **Credit Ledger commercial grant** from Suthirth solutions for **Credit Ledger** (Stripe credit ledger kit): one organization, perpetual for the named tag you purchased. Current SKU: **$79 once**. No money-back window. No resale. Copyright (c) 2026 yellowgram. [LICENSE](LICENSE) · [docs/COMMERCIAL_GRANT.md](docs/COMMERCIAL_GRANT.md). Contact: hello@yellowgram.dev.
-
-The zip Polar sells now, **0.2.0**, uses the license above for the whole kit, including `src/billing` and the free chapter. There is no MIT extract. The prior sold zip `v0.1.2` uses that same fence and stays as shipped. `v0.1.0` and `v0.1.1` stay as shipped (grandfathered; not resealed).
+Releases before 0.3.0 (tags `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT. Old zip digests: [docs/CHECKSUMS.md](docs/CHECKSUMS.md).
 
 ## Not multi-tenant auth
 
 `x-ledger-secret` / `LEDGER_API_SECRET` is not customer auth. It only opens demo checkout, check, and track, and those routes still bill `DEMO_USER_ID` (default `demo_user`). Every caller shares one balance. A `userId` in the JSON body is ignored. Leave `LEDGER_API_SECRET` unset.
 
-## Unzip to a green test
+## Clone to a green test
 
 Node.js 20+.
 
@@ -54,8 +47,8 @@ Production babysitting is yours, not a hosted loop:
 - Run `npm run holds:reap` (default 60s loop, or cron `npm run holds:reap -- --once`). Production must run that process. You own it. The demo server reaps once on the first database request, and `reserve` reaps before each reservation. Neither is the production reaper. Default TTL is 900s. One pass expires at most 200 holds. A crash after `reserve`, with nothing calling the reaper, leaves credits `held`. See [troubleshooting](docs/TROUBLESHOOTING.md).
 - A clawback pauses the user only when the balance cannot cover the pack after open holds are released (`shortfall` is journaled only in that case). Releasing a hold does not pause by itself when the balance covers the pack. A new grant does not unpause. Call `unpauseUser` from your admin path. Demo reset is not that path.
 
-## Support boundary
+## Support
 
-[SUPPORT.md](SUPPORT.md): GitHub Issues on the public repository `yellowgram/stripe-credit-ledger-kit` for **60 days** from purchase, best-effort, **no SLA**, about two hours a week. Repro required. No live secrets. No collaborator invite. Polar messages are not the queue. Vulnerability reports go to [SECURITY.md](SECURITY.md), not Issues.
+[SUPPORT.md](SUPPORT.md): best-effort GitHub Issues, **no SLA**. Repro required. No live secrets. Vulnerability reports go to [SECURITY.md](SECURITY.md), not Issues.
 
-[Troubleshooting](docs/TROUBLESHOOTING.md) · [Refund glossary](docs/REFUND_GLOSSARY.md) (no money-back on the zip; customer `charge.refunded` is a full-pack clawback) · [Listing](docs/POLAR_DELIVERABLES.md) · [Changelog](CHANGELOG.md) · [License](LICENSE) · [Commercial grant](docs/COMMERCIAL_GRANT.md)
+[Troubleshooting](docs/TROUBLESHOOTING.md) · [Refund glossary](docs/REFUND_GLOSSARY.md) (customer `charge.refunded` is a full-pack clawback) · [Changelog](CHANGELOG.md) · [License](LICENSE)

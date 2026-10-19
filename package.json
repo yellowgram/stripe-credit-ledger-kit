@@ -1,8 +1,20 @@
 {
   "name": "stripe-credit-ledger-kit",
-  "version": "0.2.0",
-  "license": "LicenseRef-PolyForm-Noncommercial-1.0.0",
+  "version": "0.3.0",
+  "license": "MIT",
   "private": true,
+  "author": {
+    "name": "yellowgram",
+    "url": "https://www.yellowgram.dev"
+  },
+  "homepage": "https://www.yellowgram.dev/oss",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yellowgram/stripe-credit-ledger-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yellowgram/stripe-credit-ledger-kit/issues"
+  },
   "description": "Cloneable Stripe credit-ledger kit for indie AI SaaS. Your Stripe, your database, real-time hard gate.",
   "scripts": {
     "dev": "next dev",
