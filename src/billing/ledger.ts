@@ -12,8 +12,8 @@
  * - Idempotency is (user_id, idempotency_key).
  * - Held rows older than the TTL are expired: status expired, an expire journal
  *   row, and the credits returned. Production must run `npm run holds:reap`.
- *   reserve() also calls reapExpiredHolds opportunistically. That call is not
- *   the production reaper. track() does not reap.
+ *   reserve() also reaps opportunistically, at most every 30 seconds per Db
+ *   handle. That call is not the production reaper. track() does not reap.
  * - This file does not bill partial token usage. finalize is an audit row.
  * - Clawback pauses only when spendable cannot cover the pack after open holds
  *   are released. Releasing a hold does not pause by itself.
@@ -21,7 +21,6 @@
  *   in the grant transaction. A won dispute does not restore credits.
  */
 import { randomUUID } from "node:crypto";
-import { databaseDialect } from "./db";
 import { LedgerError } from "./errors";
 import type {
   Db,
@@ -734,7 +733,7 @@ export async function reserve(
   assertUserId(input.userId);
   assertPositiveInt(input.amount);
   assertIdempotencyKey(input.idempotencyKey);
-  await reapExpiredHolds(db);
+  await reapOpportunistically(db);
 
   return db.transaction(async (tx) => {
     const locked = await lockBalanceRow(tx, input.userId);
@@ -1084,13 +1083,16 @@ async function expireOne(tx: Executor, reservationId: string, cutoff: string): P
 }
 
 /**
- * Return credits for holds older than the TTL. Safe to call often.
- * One call processes up to 200 holds; call again if you expect more.
+ * Return credits for holds older than the TTL. Safe to call often, from any
+ * number of processes. One call processes up to 200 holds; call again if you
+ * expect more.
  *
- * Production must run `npm run holds:reap`. Postgres locks the batch with
- * FOR UPDATE SKIP LOCKED so two reapers do not claim the same hold. SQLite
- * has no SKIP LOCKED; each hold is claimed with UPDATE ... WHERE status = 'held',
- * and only the process that changes the row returns the credits.
+ * Production must run `npm run holds:reap`. Each hold is expired in its own
+ * transaction that locks the user's balance row first and then claims the
+ * entry with UPDATE ... WHERE status = 'held'. That is the same lock order as
+ * reserve/finalize/release (balance row, then entry), so the reaper cannot
+ * deadlock against them. When two reapers pick the same hold, the second one
+ * waits on the balance row, sees the hold is no longer held, and skips it.
  */
 export async function reapExpiredHolds(
   db: Db,
@@ -1099,25 +1101,6 @@ export async function reapExpiredHolds(
   const now = options?.now ?? new Date();
   const ttl = options?.ttlSeconds ?? holdTtlSeconds();
   const cutoff = new Date(now.getTime() - ttl * 1000).toISOString();
-  if ((await databaseDialect(db)) === "postgres") {
-    const expired = await db.transaction(async (tx) => {
-      const rows = await tx.all<{ id: string }>(
-        `SELECT id FROM credit_ledger_entries
-         WHERE kind = 'reserve' AND status = 'held' AND created_at <= ?
-         ORDER BY created_at ASC
-         LIMIT ?
-         FOR UPDATE SKIP LOCKED`,
-        [cutoff, REAPER_BATCH],
-      );
-      let count = 0;
-      for (const row of rows) {
-        if (await expireOne(tx, row.id, cutoff)) count += 1;
-      }
-      return count;
-    });
-    return { expired };
-  }
-
   const rows = await db.all<{ id: string }>(
     `SELECT id FROM credit_ledger_entries
      WHERE kind = 'reserve' AND status = 'held' AND created_at <= ?
@@ -1131,4 +1114,26 @@ export async function reapExpiredHolds(
     if (did) expired += 1;
   }
   return { expired };
+}
+
+/** reserve() reaps at most this often per Db handle. */
+export const OPPORTUNISTIC_REAP_INTERVAL_MS = 30_000;
+const lastOpportunisticReap = new WeakMap<Db, number>();
+
+/**
+ * The reap reserve() runs before it reserves. At most once per
+ * OPPORTUNISTIC_REAP_INTERVAL_MS per Db handle, so a busy reserve path does
+ * not scan for expired holds on every call. A failure here never fails the
+ * reservation; the production reaper (`npm run holds:reap`) reports errors.
+ */
+async function reapOpportunistically(db: Db): Promise<void> {
+  const nowMs = Date.now();
+  const last = lastOpportunisticReap.get(db);
+  if (last !== undefined && nowMs - last < OPPORTUNISTIC_REAP_INTERVAL_MS) return;
+  lastOpportunisticReap.set(db, nowMs);
+  try {
+    await reapExpiredHolds(db);
+  } catch {
+    // Not the production reaper. reserve() goes on to its own transaction.
+  }
 }

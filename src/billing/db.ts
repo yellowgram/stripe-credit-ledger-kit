@@ -116,6 +116,25 @@ function postgresExecutor(queryable: {
   };
 }
 
+async function runPostgresTransaction<T>(pool: pg.Pool, fn: (tx: Executor) => Promise<T>): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await fn(postgresExecutor(client));
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      // The original error is the one the caller needs.
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export function createPostgresDb(connectionString: string): Db {
   const pool = new Pool({ connectionString, max: 10 });
   const autocommit = postgresExecutor(pool);
@@ -125,21 +144,16 @@ export function createPostgresDb(connectionString: string): Db {
     all: autocommit.all,
     run: autocommit.run,
     async transaction<T>(fn: (tx: Executor) => Promise<T>): Promise<T> {
-      const client = await pool.connect();
-      try {
-        await client.query("BEGIN");
-        const result = await fn(postgresExecutor(client));
-        await client.query("COMMIT");
-        return result;
-      } catch (error) {
+      // Postgres aborts one side of a deadlock with 40P01. The ledger takes
+      // locks in one order (balance row, then entries), so this should not
+      // happen; if a caller's own transaction mixes users, retry it once on a
+      // fresh connection. fn must touch only the database (it may run twice).
+      for (let attempt = 1; ; attempt++) {
         try {
-          await client.query("ROLLBACK");
-        } catch {
-          // The original error is the one the caller needs.
+          return await runPostgresTransaction(pool, fn);
+        } catch (error) {
+          if (attempt >= 2 || (error as { code?: unknown })?.code !== "40P01") throw error;
         }
-        throw error;
-      } finally {
-        client.release();
       }
     },
     async close() {

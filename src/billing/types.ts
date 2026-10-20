@@ -27,7 +27,9 @@ export interface Db extends Executor {
   /**
    * Run `fn` inside a single transaction. Commit on success, roll back on throw.
    * Implementations must not interleave other writers on the same connection.
-   * Nested transactions are not supported.
+   * Nested transactions are not supported. The Postgres adapter retries `fn` once
+   * on a fresh transaction if Postgres reports a deadlock (40P01), so `fn` should
+   * only touch the database.
    */
   transaction<T>(fn: (tx: Executor) => Promise<T>): Promise<T>;
   close(): Promise<void>;

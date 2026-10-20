@@ -102,13 +102,24 @@ suite("postgres concurrency", () => {
     });
     const held = await reserve(db, { userId, amount: 10, idempotencyKey: `${userId}_hold` });
     expect(held.ok).toBe(true);
-    const worker = path.resolve("tests/workers/reap-once.ts");
-    const now = new Date(Date.now() + 60_000).toISOString();
-    const [left, right] = await Promise.all([
-      runChild<{ expired: number }>(worker, { databaseUrl, now, ttlSeconds: 1 }),
-      runChild<{ expired: number }>(worker, { databaseUrl, now, ttlSeconds: 1 }),
+    // Age only this hold, so the reapers leave other suites' fresh holds alone.
+    await db.run(`UPDATE credit_ledger_entries SET created_at = ? WHERE user_id = ? AND kind = 'reserve'`, [
+      new Date(Date.now() - 2 * 3600_000).toISOString(),
+      userId,
     ]);
-    expect(left.expired + right.expired).toBe(1);
+    const worker = path.resolve("tests/workers/reap-once.ts");
+    const now = new Date().toISOString();
+    await Promise.all([
+      runChild<{ expired: number }>(worker, { databaseUrl, now, ttlSeconds: 3600 }),
+      runChild<{ expired: number }>(worker, { databaseUrl, now, ttlSeconds: 3600 }),
+    ]);
+    // Other suites share this database and also reap aged holds, so the
+    // per-process counts are not this hold's alone. It must be expired once.
+    const expires = await db.all<{ id: string }>(
+      `SELECT id FROM credit_ledger_entries WHERE user_id = ? AND kind = 'expire'`,
+      [userId],
+    );
+    expect(expires).toHaveLength(1);
     expect(await getBalance(db, userId)).toBe(30);
     await db.run(`DELETE FROM credit_ledger_entries WHERE user_id = ?`, [userId]);
     await db.run(`DELETE FROM credit_balances WHERE user_id = ?`, [userId]);

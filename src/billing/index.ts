@@ -36,6 +36,7 @@ export {
   holdTtlSeconds,
   listEntries,
   listHeldReservations,
+  OPPORTUNISTIC_REAP_INTERVAL_MS,
   reapExpiredHolds,
   recordPendingClawback,
   release,
