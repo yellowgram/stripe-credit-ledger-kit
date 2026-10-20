@@ -988,8 +988,12 @@ export async function balanceBreakdown(
     finalized_reserves: unknown;
     held: unknown;
     clawbacks: unknown;
+    balance: unknown;
   }>(
+    // One statement, so the sums and the balance come from one snapshot. Two reads let a
+    // concurrent commit (a reaper expiring a hold) land between them and report a false mismatch.
     `SELECT
+       (SELECT balance FROM credit_balances WHERE user_id = ?) AS balance,
        COALESCE(SUM(CASE WHEN kind = 'grant' THEN delta ELSE 0 END), 0) AS grants,
        COALESCE(SUM(CASE WHEN kind = 'track' THEN -delta ELSE 0 END), 0) AS tracks,
        COALESCE(SUM(CASE WHEN kind = 'reserve' AND status = 'finalized' THEN -delta ELSE 0 END), 0) AS finalized_reserves,
@@ -997,14 +1001,14 @@ export async function balanceBreakdown(
        COALESCE(SUM(CASE WHEN kind = 'clawback' THEN -delta ELSE 0 END), 0) AS clawbacks
      FROM credit_ledger_entries
      WHERE user_id = ?`,
-    [userId],
+    [userId, userId],
   );
   const grants = asInt(row?.grants ?? 0);
   const finalizedSpends = asInt(row?.tracks ?? 0) + asInt(row?.finalized_reserves ?? 0);
   const heldReserves = asInt(row?.held ?? 0);
   const clawbacks = asInt(row?.clawbacks ?? 0);
   const expected = grants - finalizedSpends - heldReserves - clawbacks;
-  const balance = await getBalance(db, userId);
+  const balance = row?.balance == null ? 0 : asInt(row.balance);
   return { balance, expected, grants, finalizedSpends, heldReserves, clawbacks };
 }
 

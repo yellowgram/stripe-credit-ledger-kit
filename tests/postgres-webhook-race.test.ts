@@ -123,8 +123,9 @@ suite("postgres grant vs refund race (CL-1)", () => {
       [randomUUID(), pi, `evt_orphan_${pi}`, new Date().toISOString()],
     );
     expect(await getBalance(db, user)).toBe(100);
-    const first = await applyOrphanedClawbacks(db);
-    expect(first.applied).toBeGreaterThanOrEqual(1);
+    // Assert the effect, not this call's count: on a shared database another backstop run
+    // (a parallel test file) may apply this row first.
+    await applyOrphanedClawbacks(db);
     expect(await getBalance(db, user)).toBe(0);
     expect(await db.all(`SELECT id FROM pending_clawbacks WHERE payment_intent_id = ?`, [pi])).toHaveLength(0);
     const b = await balanceBreakdown(db, user);

@@ -277,7 +277,20 @@ function paymentLockKeys(ids: { paymentIntentId: string | null; chargeId: string
  * versions or by a grant written outside the webhook path.
  */
 export async function applyOrphanedClawbacks(db: Db, limit = 200): Promise<{ applied: number }> {
-  const rows = await db.all<{ id: string }>(`SELECT id FROM pending_clawbacks ORDER BY created_at ASC LIMIT ?`, [limit]);
+  // Only rows that a grant can match. A pending row whose grant never arrives (a refund for something
+  // this ledger never sold) stays, but it no longer takes one of the `limit` slots, so it can't starve
+  // newer, matchable rows (CL-9). Same three ids, same order of preference, as findGrant below.
+  const rows = await db.all<{ id: string }>(
+    `SELECT p.id FROM pending_clawbacks p
+     WHERE EXISTS (
+       SELECT 1 FROM credit_ledger_entries g
+       WHERE g.kind = 'grant'
+         AND ((p.payment_intent_id IS NOT NULL AND g.payment_intent_id = p.payment_intent_id)
+           OR (p.charge_id IS NOT NULL AND g.charge_id = p.charge_id)
+           OR (p.checkout_session_id IS NOT NULL AND g.checkout_session_id = p.checkout_session_id)))
+     ORDER BY p.created_at ASC LIMIT ?`,
+    [limit],
+  );
   let applied = 0;
   for (const { id } of rows) {
     const did = await db.transaction(async (tx) => {
@@ -288,6 +301,9 @@ export async function applyOrphanedClawbacks(db: Db, limit = 200): Promise<{ app
       if (!row) return false;
       const ids = { paymentIntentId: row.payment_intent_id, chargeId: row.charge_id, sessionId: row.checkout_session_id };
       await lockPayment(tx, paymentLockKeys(ids));
+      // Re-check under the lock: a concurrent grant (or another reaper) may have consumed this row
+      // between the read above and the lock, and that must not count as applied here (CL-11).
+      if (!(await tx.get(`SELECT id FROM pending_clawbacks WHERE id = ?`, [row.id]))) return false;
       const grant = await findGrant(tx, ids);
       if (!grant) return false;
       const paymentIntentId = grant.payment_intent_id ?? ids.paymentIntentId ?? (ids.chargeId ? `charge:${ids.chargeId}` : null);
