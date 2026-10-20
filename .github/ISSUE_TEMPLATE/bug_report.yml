@@ -7,7 +7,7 @@ body:
       value: |
         Issues are best-effort, no SLA. See SUPPORT.md.
 
-        **Out of scope (this Issue will be closed with the paste-ready reply in SUPPORT.md):** hosted wallet or SaaS, Autumn/Metronome parity, implementation services, Polar inside the app, live-key debugging.
+        **Out of scope (this Issue will be closed with the paste-ready reply in SUPPORT.md):** hosted wallet or SaaS, Autumn/Metronome parity, implementation services, live-key debugging.
 
         Do not paste secrets. A missing repro pack is commented and closed after 7 days. Vulnerability reports go to SECURITY.md, not this form.
 
@@ -82,7 +82,7 @@ body:
           required: true
         - label: The repro box is a failing test name from this kit or a Stripe test-mode event id (evt_), not a live-mode event.
           required: true
-        - label: This is not a request for hosted SaaS, Autumn/Metronome parity, implementation help, Polar-in-app, or live-key debugging. I know those are closed with the SUPPORT.md reply.
+        - label: This is not a request for hosted SaaS, Autumn/Metronome parity, implementation help, or live-key debugging. I know those are closed with the SUPPORT.md reply.
           required: true
 
   - type: markdown

@@ -237,4 +237,4 @@ No fake case studies here. Decide on the tree.
 | Autumn `check` | https://docs.useautumn.com/api-reference/core/check |
 | Autumn credit systems | https://docs.useautumn.com/documentation/modelling-pricing/credit-systems |
 
-*Draft for founder voice edit. Do not paste live API keys. Not legal or billing advice — read the linked primary docs before you ship.*
+*Do not paste live API keys. Not legal or billing advice — read the linked primary docs before you ship.*

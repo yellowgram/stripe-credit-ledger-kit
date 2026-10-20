@@ -1,8 +1,8 @@
 # Start here
 
-MIT licensed ([LICENSE](LICENSE)). Copyright (c) 2026 yellowgram. Use this repository as a GitHub template or clone it. Security reports: [SECURITY.md](SECURITY.md). Polar is not in the app.
+MIT licensed ([LICENSE](LICENSE)). Copyright (c) 2026 yellowgram. Use this repository as a GitHub template or clone it. Security reports: [SECURITY.md](SECURITY.md).
 
-Releases before 0.3.0 (tags `v0.1.0`, `v0.1.1`, `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT. Old zip digests: [docs/CHECKSUMS.md](docs/CHECKSUMS.md).
+Releases before 0.3.0 (tags `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT. Old zip digests: [docs/CHECKSUMS.md](docs/CHECKSUMS.md).
 
 ## Not multi-tenant auth
 
@@ -44,7 +44,7 @@ Copy `src/billing` into your app. `userId` comes from your session. Do not ship 
 
 Production babysitting is yours, not a hosted loop:
 
-- Run `npm run holds:reap` (default 60s loop, or cron `npm run holds:reap -- --once`). Production must run that process. You own it. The demo server reaps once on the first database request, and `reserve` reaps before each reservation. Neither is the production reaper. Default TTL is 900s. One pass expires at most 200 holds. A crash after `reserve`, with nothing calling the reaper, leaves credits `held`. See [troubleshooting](docs/TROUBLESHOOTING.md).
+- Run `npm run holds:reap` (default 60s loop, or cron `npm run holds:reap -- --once`). Production must run that process. You own it. The demo server reaps once on the first database request, and `reserve` reaps at most every 30 seconds. Neither is the production reaper. Default TTL is 900s. One pass expires at most 200 holds. A crash after `reserve`, with nothing calling the reaper, leaves credits `held`. See [troubleshooting](docs/TROUBLESHOOTING.md).
 - A clawback pauses the user only when the balance cannot cover the pack after open holds are released (`shortfall` is journaled only in that case). Releasing a hold does not pause by itself when the balance covers the pack. A new grant does not unpause. Call `unpauseUser` from your admin path. Demo reset is not that path.
 
 ## Support

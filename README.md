@@ -6,7 +6,7 @@ Cloneable credit ledger for indie AI SaaS. **Your** Stripe. **Your** database. A
 
 Buy a credit pack in Stripe Checkout → webhook grants a balance → `check` / `reserve` → `finalize` or `release` → a small balance page. This repository is that billing module plus a thin demo shell. It is not a chat app, not a hosted wallet, and not Stripe Credit Grants.
 
-Polar is not in this codebase. Your customers pay on your Stripe account. We never hold their balances.
+Your customers pay on your Stripe account. Balances live in your database. Nobody else holds them.
 
 MIT licensed and no longer sold. Use it as a GitHub template or clone it. Releases before 0.3.0 (tags `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT. Start at [START_HERE.md](START_HERE.md). Digests of the old zips: [docs/CHECKSUMS.md](docs/CHECKSUMS.md). Changes: [CHANGELOG.md](CHANGELOG.md).
 
@@ -25,7 +25,7 @@ Stay if you want owned Postgres (or SQLite) on your Stripe Checkout, a hard stop
 
 ## Not an API auth header
 
-`LEDGER_API_SECRET` / `x-ledger-secret` does not pick a customer. Checkout, check, and track still bill `DEMO_USER_ID` (default `demo_user`). That is one shared demo balance, not multi-tenant auth. A `userId` in the JSON body is ignored. Leave the secret unset. Copy `src/billing` and pass `userId` from your session. The same warning sits on [BUYER_START_HERE.md](BUYER_START_HERE.md), in [Environment](#environment), and under [Known limits](#known-limits).
+`LEDGER_API_SECRET` / `x-ledger-secret` does not pick a customer. Checkout, check, and track still bill `DEMO_USER_ID` (default `demo_user`). That is one shared demo balance, not multi-tenant auth. A `userId` in the JSON body is ignored. Leave the secret unset. Copy `src/billing` and pass `userId` from your session. The same warning sits in [START_HERE.md](START_HERE.md), in [Environment](#environment), and under [Known limits](#known-limits).
 
 ## What you get
 
@@ -41,14 +41,20 @@ Stay if you want owned Postgres (or SQLite) on your Stripe Checkout, a hard stop
 
 Reservations are rows in `credit_ledger_entries` (`kind = 'reserve'`, status `held` → `finalized` or `released`). There is no fourth balance table.
 
-## Quick start (Stripe test mode)
+## Quick start (five minutes, no Stripe account)
 
-Requirements: Node.js 20+.
+Requirements: Node.js 20+. `npm install` builds `better-sqlite3`, a native module. Prebuilt binaries cover the common Linux, macOS, and Windows targets for current Node releases; where none matches, it compiles and needs Python 3, `make`, and a C++ compiler. It is a dependency even if you only use Postgres; drop it from `package.json` and `src/billing/db.ts` when you copy the module if you never use SQLite.
 
 ```bash
 npm install
-cp.env.example.env.local
+cp .env.example .env.local
+echo 'ALLOW_DEMO_CONTROLS=true' >> .env.local   # local demo only
+npm run db:migrate
+npm run demo      # signed fixture: grants 100 credits, then a replay that grants nothing
+npm test          # offline, SQLite
 ```
+
+That is the whole loop on SQLite with no Stripe network. The sections below switch to Postgres, take a real test-mode payment, and open the demo UI.
 
 **Postgres (use this for anything you ship).**
 
@@ -89,14 +95,14 @@ Stripe CLI Checkout is the optional real test payment: Stripe’s hosted page an
 
 1. Install the [Stripe CLI](https://docs.stripe.com/stripe-cli) and `stripe login`.
 2. `stripe listen --forward-to localhost:3000/api/webhooks/stripe`
-3. Copy the CLI `whsec_.` into `STRIPE_WEBHOOK_SECRET`. That secret is not the one in the Dashboard. Restart `npm run dev`.
-4. Put `sk_test_.` in `STRIPE_SECRET_KEY`.
+3. Copy the CLI `whsec_...` into `STRIPE_WEBHOOK_SECRET`. That secret is not the one in the Dashboard. Restart `npm run dev`.
+4. Put `sk_test_...` in `STRIPE_SECRET_KEY`.
 5. Click **Buy** on a pack. Card `4242 4242 4242 4242`, any future expiry, any CVC, any postal code.
 6. The balance increases when `checkout.session.completed` is processed (`payment_status=paid`), not when the success page loads.
 7. Replay the same event. The balance must not move.
 
 ```bash
-stripe events resend evt_.
+stripe events resend evt_...
 ```
 
 Delayed payment methods (no instant capture) grant on `checkout.session.async_payment_succeeded` instead. `payment_intent.succeeded` is stored and ignored so it cannot grant a second time.
@@ -125,12 +131,12 @@ This posts to `NEXT_PUBLIC_APP_URL` (default `http://localhost:3000`). It does n
 
 **`x-ledger-secret` still bills `DEMO_USER_ID`.** Matching `LEDGER_API_SECRET` opens checkout, check, and track only. It does not select a customer and it is not multi-tenant auth. Leave `LEDGER_API_SECRET` unset. Copy `src/billing` and pass `userId` from your session.
 
-See `.env.example`.
+See `.env.example`. The `npm run` scripts read `.env.local`, then `.env`; a variable already set in the process environment wins over both, as in Next.js.
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `STRIPE_SECRET_KEY` | To open Checkout | `sk_test_.` while you are testing. Never commit a live key. |
-| `STRIPE_WEBHOOK_SECRET` | To accept webhooks | `whsec_.` from `stripe listen` or the Dashboard endpoint. |
+| `STRIPE_SECRET_KEY` | To open Checkout | `sk_test_...` while you are testing. Never commit a live key. |
+| `STRIPE_WEBHOOK_SECRET` | To accept webhooks | `whsec_...` from `stripe listen` or the Dashboard endpoint. |
 | `NEXT_PUBLIC_APP_URL` | Recommended | The only origin for Checkout `success_url` and `cancel_url`. Default `http://localhost:3000`. `x-forwarded-host` is ignored. |
 | `DATABASE_URL` | Production | `postgres://` or `postgresql://`. Wins over SQLite when set. |
 | `SQLITE_PATH` | Dev alternate | File path. Ignored when `DATABASE_URL` is Postgres. |
@@ -141,7 +147,7 @@ See `.env.example`.
 | `CREDIT_HOLD_REAP_INTERVAL_SECONDS` | Optional | Sleep between passes of `npm run holds:reap`. Default `60`. |
 | `STRIPE_EXPECT_LIVEMODE` | Optional | `true` or `false` overrides the key prefix. Unset: `sk_live_` expects live events; every other key expects test events. |
 
-The app creates tables on boot (`ensureSchema`, which runs the versioned migrations). It seeds the demo user (`seed:<userId>`) only when `ALLOW_DEMO_CONTROLS=true`. `npm run db:migrate` is the buyer path and runs those same migrations.
+The app creates tables on boot (`ensureSchema`, which runs the versioned migrations). It seeds the demo user (`seed:<userId>`) only when `ALLOW_DEMO_CONTROLS=true`. `npm run db:migrate` runs those same migrations without starting the app.
 
 ## Flows
 
@@ -167,15 +173,15 @@ Default policy: **bill the reserved amount**. Credits leave the balance at reser
 ```ts
 const reserved = await reserve(db, { userId, amount: 10, idempotencyKey });
 if (!reserved.ok) {
- // 402 — do not call the model
+  // 402 — do not call the model
 }
 try {
- const output = await callYourModel();
- await finalize(db, userId, idempotencyKey);
- return output;
-} catch {
- await release(db, userId, idempotencyKey);
- throw;
+  const output = await callYourModel();
+  await finalize(db, userId, idempotencyKey);
+  return output;
+} catch (error) {
+  await release(db, userId, idempotencyKey);
+  throw error;
 }
 ```
 
@@ -212,9 +218,9 @@ That process is the reaper. A crash after `reserve` and before `finalize` or `re
 
 `npm run holds:reap` is `scripts/reap-holds.ts`. It loops. `CREDIT_HOLD_REAP_INTERVAL_SECONDS` defaults to 60. `npm run holds:reap -- --once` expires one batch and exits. One call expires at most 200 holds. An expired key stays consumed (`hold_expired`). Start a new key for a new call.
 
-`reserve` still calls `reapExpiredHolds` before each reservation, and the demo server calls it once on the first database request. Those calls are opportunistic. They are not the production strategy. `track` does not reap. This kit does not ship a scheduler.
+`reserve` also reaps before it reserves, at most once every 30 seconds per database handle (`OPPORTUNISTIC_REAP_INTERVAL_MS`), and the demo server reaps once on the first database request. A failure in that opportunistic pass does not fail the reservation. Neither is the production reaper: on a quiet app nothing calls `reserve`, so held credits wait for `npm run holds:reap`. `track` does not reap. This kit does not ship a scheduler.
 
-Two reaper processes must not double-expire one hold. Postgres claims a batch with `FOR UPDATE SKIP LOCKED`. SQLite claims each hold with `UPDATE. WHERE status = 'held'`, so only one process returns the credits.
+You can run more than one reaper. Each hold is expired in its own transaction that locks the user's balance row first and then claims the hold with `UPDATE ... WHERE status = 'held'`. That is the same lock order `reserve`, `finalize`, and `release` use, so a reaper cannot deadlock against them, and when two reapers pick the same hold only one returns the credits. If Postgres still reports a deadlock (40P01), for example inside your own transaction that touches two users, the Postgres adapter retries that transaction once.
 
 ## Refunds and disputes
 
@@ -267,10 +273,13 @@ npm test
 | `tests/concurrent-race.test.ts` | Two processes, two SQLite connections, one balance of 10. One reserve wins. The demo race helper agrees. |
 | `tests/failed-after-reserve.test.ts` | Provider failure releases. Second release does not refund. Finalize then release does not refund. `track` is at-most-once. |
 | `tests/review-fixes.test.ts` | Fail-closed replay, per-user keys, reaper, refund/dispute clawback, livemode, currency, balance invariant. |
-| `tests/phase-b.test.ts` | Pending clawback then grant, pause only on shortfall, NULL-key rejection, versioned migrate, concurrent reaper. |
+| `tests/clawback-and-migrate.test.ts` | Pending clawback then grant, pause only on shortfall, NULL-key rejection, versioned migrate, concurrent reaper. |
+| `tests/reaper-throttle.test.ts` | `reserve` reaps at most once per interval. |
+| `tests/script-env.test.ts` | Scripts take the process environment over `.env.local` over `.env`. |
 | `tests/webhook-status.test.ts` | Signature and placeholder secret are HTTP 400. Livemode mismatch is HTTP 400. Amount mismatch is HTTP 500. Track requires a client key. Demo controls default off. Checkout origin is `NEXT_PUBLIC_APP_URL`. |
 | `tests/shell-gates.test.ts` | Checkout, check, and track are 404 when the demo flag is off. A matching `x-ledger-secret` or the demo flag opens them. |
 | `tests/postgres-concurrency.test.ts` | Skipped unless `DATABASE_URL` is Postgres. Two-process last-credit race and webhook replay on Postgres. |
+| `tests/postgres-deadlock.test.ts` | Skipped unless `DATABASE_URL` is Postgres. `finalize` and `release` racing six reapers: no deadlock, each hold settled once. A deadlock victim is retried once. |
 
 The race test spawns two processes so the decrement is not just serialized on one connection’s mutex. `npm test` needs no Postgres and no Stripe network. The GitHub Actions `postgres` job sets `DATABASE_URL` and runs the same suite, including the Postgres race, on Node 20 and Node 22. The gate stays `UPDATE … AND balance >= ?`. It does not require `SERIALIZABLE`.
 
@@ -310,7 +319,8 @@ Short runbook for the cases below: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTIN
 | Provider error after reserve | `release` returns the credits. |
 | Same key after release, finalize, or expiry | Error. Not `ok: true`. |
 | Hold older than the TTL | Reaper returns the credits. |
-| Two spends of the last credit | One `UPDATE. WHERE balance >= ?` wins. |
+| Two spends of the last credit | One `UPDATE ... WHERE balance >= ?` wins. |
+| Reaper racing `finalize` / `release` | Same lock order (balance row, then hold). No deadlock; the hold settles once. |
 
 Stripe retries non-2xx responses for days. Return 500 only when a retry could succeed (database blip, bug you are about to fix). Signature failures stay 400 so Stripe stops.
 
@@ -322,10 +332,27 @@ Stripe retries non-2xx responses for days. Return 500 only when a retry could su
 - Partial refunds claw back the whole pack. A won dispute does not return credits.
 - Reserve replay matches user, key, and amount. There is no payload hash.
 - The balance column is the spendable number. The journal explains it. It is not an event-sourced ledger.
+- One currency per pack, no taxes, no proration, no subscriptions. Credits do not expire; only holds do.
+- Holds are not extended. A call that runs longer than `CREDIT_HOLD_TTL_SECONDS` can have its hold expired; `finalize` then returns `hold_expired` and the credits are already back. Set the TTL above your slowest call.
+
+## Threat model
+
+What the kit defends:
+
+- **Forged or replayed webhooks.** Every webhook is signature-checked against `STRIPE_WEBHOOK_SECRET`; `stripe_events.id`, the Checkout session id, and the payment intent are unique, so a replay or a second event for one payment grants once.
+- **Client-chosen amounts.** The grant comes from the pack catalog and must match `amount_total` and currency. `metadata.credits` is ignored.
+- **Test/live mix-ups.** An event whose livemode does not match the key is rejected before it is stored.
+- **Races.** Two requests for the last credit, two webhook deliveries, two reapers, a reaper against `finalize`: one row lock and one conditional `UPDATE` decide each.
+
+What it does not defend, and you must:
+
+- **Who the user is.** `userId` comes from your session. The demo routes bill one shared `DEMO_USER_ID` and have no login. Do not expose them.
+- **Your database and keys.** Anyone with write access to the tables or your Stripe secret can mint credits.
+- **Abuse inside the rules.** Refund-after-spend is clawed back and the user is paused, but credits already spent on model calls are your cost.
 
 ## SQLite instead of Postgres
 
-Postgres is the database to ship: one `DATABASE_URL`, row locks, more than one app server. SQLite is the documented alternate for a solo demo and for `npm test`. Set `SQLITE_PATH` and do not set a `postgres://` `DATABASE_URL`. The driver enables WAL and a 5 second busy timeout. The statements in `schema.ts` are the same text on both engines (`BIGINT`, `ON CONFLICT`, `RETURNING`).
+Postgres is the database to ship: one `DATABASE_URL`, row locks, more than one app server. SQLite is the documented alternate for a solo demo and for `npm test`. Set `SQLITE_PATH` and do not set a `postgres://` `DATABASE_URL`. The adapter uses `better-sqlite3` (synchronous, native), serializes every statement in the process behind one mutex, opens write transactions with `BEGIN IMMEDIATE`, and enables WAL and a 5 second busy timeout. The statements in `schema.ts` are the same text on both engines (`BIGINT`, `ON CONFLICT`, `RETURNING`).
 
 If you run more than one Node process against one SQLite file, expect lock waits under load. Move to Postgres before you do that on purpose.
 
@@ -358,7 +385,6 @@ Details: [SUPPORT.md](SUPPORT.md). Vulnerability reports: [SECURITY.md](SECURITY
 ## Free chapter
 
 [Stripe Credit Grants Are Invoice-Time](docs/stripe-credit-grants-are-invoice-time.md) — when to use Grants, this kind of ledger, Metronome, or Autumn. It is public on purpose. Do not paywall it.
-
 
 Status: [docs/STATUS.md](docs/STATUS.md).
 

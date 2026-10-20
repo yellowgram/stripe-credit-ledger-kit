@@ -30,8 +30,6 @@ Start with [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) and [docs/REFUND_G
 - Hosted SaaS, a yellowgram-operated wallet, or a managed dashboard
 - Autumn or Metronome feature parity (plans, entitlements, rollovers, dimensional pricing, hosted `check` / `track`)
 - Implementation services (wiring reserve/finalize into your app, auth, Stripe Dashboard clicks, process supervision)
-- Polar inside the application (SDK, webhooks, customer portal)
-- India-local ICP customization
 - Debugging production live keys
 
 ## Paste-ready reply
@@ -41,7 +39,7 @@ Use this as the close comment for out-of-scope requests.
 ```
 Closing as out of scope for the Stripe credit ledger kit.
 
-This project is a template: copy `src/billing` onto your Stripe account and your database. It is not a hosted wallet, not an Autumn or Metronome control plane (plans, entitlements, rollovers, dimensional pricing), not implementation services, and not Polar inside the app (no Polar SDK, webhooks, or portal). Live secret keys are not debugged here.
+This project is a template: copy `src/billing` onto your Stripe account and your database. It is not a hosted wallet, not an Autumn or Metronome control plane (plans, entitlements, rollovers, dimensional pricing), and not implementation services. Live secret keys are not debugged here.
 
 If you wanted a control plane, use the README section "Use Autumn or Metronome instead when…" and the free chapter. Do not file that as a bug.
 

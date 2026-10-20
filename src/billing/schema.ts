@@ -1,5 +1,5 @@
 /**
- * Versioned ledger schema. `migrate` is the buyer path (`npm run db:migrate`).
+ * Versioned ledger schema. `npm run db:migrate` calls `migrate`; boot calls it through `ensureSchema`.
  * `ensureSchema` runs the same migrations on boot.
  *
  * 001 is the 0.1.2 baseline (tables, added columns, per-user idempotency).

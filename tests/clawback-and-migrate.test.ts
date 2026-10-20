@@ -20,7 +20,7 @@ import { checkoutEvent, runChild, tempDb } from "./helpers";
 
 const testEnv = { STRIPE_SECRET_KEY: "sk_test_phase_b" };
 
-describe("phase B", () => {
+describe("pending clawback, pause, keys, migrate", () => {
   const cleanups: Array<() => Promise<void>> = [];
 
   afterEach(async () => {

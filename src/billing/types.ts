@@ -1,5 +1,5 @@
 /**
- * A buyer can implement `Db` on Postgres, SQLite, or anything that can run the
+ * You can implement `Db` on Postgres, SQLite, or anything that can run the
  * statements in ledger.ts inside a transaction. The kit ships two adapters in
  * src/billing/db.ts.
  */
