@@ -35,6 +35,17 @@ export interface TxExecutor extends Executor {
   lockKeys(keys: readonly string[]): Promise<void>;
 }
 
+/**
+ * Set on a `lockKeys` that intentionally does nothing because the transaction is already
+ * serialized (the built-in SQLite adapter: BEGIN IMMEDIATE). On any other executor the webhook
+ * handlers check after `lockKeys` that Postgres holds `pg_advisory_xact_lock(hashtext(key))` for
+ * every key, and refuse the event (`lock_not_held`) if not.
+ */
+export const SERIALIZED_LOCK: unique symbol = Symbol.for("stripe-credit-ledger-kit.serializedLock");
+export interface SerializedLock {
+  [SERIALIZED_LOCK]?: true;
+}
+
 export interface Db extends Executor {
   /**
    * Run `fn` inside a single transaction. Commit on success, roll back on throw.

@@ -34,8 +34,11 @@ suite("postgres lock order", () => {
         await grantCredits(db, { userId: u, credits: 10, packId: "pack_100", idempotencyKey: `g_${u}` });
         expect((await reserve(db, { userId: u, amount: 5, idempotencyKey: `r_${u}` })).ok).toBe(true);
       }
-      // Age only these holds, so the reapers leave other suites' fresh holds alone.
-      const aged = new Date(Date.now() - 2 * 3600_000).toISOString();
+      // Age only these holds, and make them the oldest held reserves in the database (year 2000):
+      // the reaper takes the oldest holds first, so on a reused database older leftover holds would
+      // otherwise fill its batch, the reapers would never contend with these settles, and a
+      // lock-order regression could pass (CL-3 note). Other suites' fresh holds are left alone.
+      const aged = new Date(Date.UTC(2000, 0, 1) + round * 1000).toISOString();
       for (const u of users) {
         await db.run(`UPDATE credit_ledger_entries SET created_at = ? WHERE user_id = ? AND kind = 'reserve'`, [aged, u]);
       }

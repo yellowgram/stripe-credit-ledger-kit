@@ -10,7 +10,10 @@ export type {
   LedgerEntry,
   LedgerKind,
   ReservationStatus,
+  SerializedLock,
+  TxExecutor,
 } from "./types";
+export { SERIALIZED_LOCK } from "./types";
 export { PACKS, creditPackMetadata, getPack } from "./packs";
 export type { CreditPack } from "./packs";
 export { appliedMigrations, ensureSchema, migrate } from "./schema";

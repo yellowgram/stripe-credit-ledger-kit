@@ -299,7 +299,7 @@ After **Use this template** (or a clone), before you ship:
 
 `src/billing` does not import Next.js. Copy the folder. Wire your own user id (from your auth, not from the client body). Keep `ensureSchema` on boot or run `npm run db:migrate` (`migrate` in `src/billing/schema.ts`).
 
-You can implement `Db` yourself and still use `ledger.ts`, `types.ts`, and `errors.ts`. Its `transaction` must hand the callback a `TxExecutor`, whose `lockKeys` is required: on Postgres implement it with `pg_advisory_xact_lock` as `src/billing/db.ts` does (on SQLite it can do nothing). Without it a refund that races its grant would be lost, so the webhook handlers refuse such an executor with `executor_missing_lockKeys`. The whole tree, including adapters in `src/billing/db.ts`, Checkout, webhook, and catalog, is MIT. See `LICENSE`.
+You can implement `Db` yourself and still use `ledger.ts`, `types.ts`, and `errors.ts`. Its `transaction` must hand the callback a `TxExecutor`, whose `lockKeys` is required: on Postgres implement it with `pg_advisory_xact_lock(hashtext(key))` for each key, as `src/billing/db.ts` does. Without it a refund that races its grant would be lost, so the webhook handlers refuse an executor with no `lockKeys` (`executor_missing_lockKeys`), and on Postgres they check `pg_locks` after locking and refuse a `lockKeys` that did not take those advisory locks (`lock_not_held`; the event is not stored and Stripe retries). On SQLite, writes are already serialized; a custom SQLite `lockKeys` can do nothing (mark it with `SERIALIZED_LOCK` from `types.ts` to skip the check). The whole tree, including adapters in `src/billing/db.ts`, Checkout, webhook, and catalog, is MIT. See `LICENSE`.
 
 Delete the demo shell when it is no longer useful:
 

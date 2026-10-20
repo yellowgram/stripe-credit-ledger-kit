@@ -2,7 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
 import pg from "pg";
-import type { Db, Executor, TxExecutor } from "./types";
+import { SERIALIZED_LOCK, type Db, type Executor, type TxExecutor } from "./types";
+
+/** SQLite transactions run under BEGIN IMMEDIATE, so they are already serialized: no lock to take. */
+const serializedNoopLock = Object.assign(async (_keys: readonly string[]) => {}, { [SERIALIZED_LOCK]: true as const });
 
 const { Pool, types } = pg;
 
@@ -80,7 +83,7 @@ export function createSqliteDb(filename: string): Db {
         inTransaction = true;
         sqlite.exec("BEGIN IMMEDIATE");
         try {
-          const result = await fn({ ...executor, lockKeys: async () => {} });
+          const result = await fn({ ...executor, lockKeys: serializedNoopLock });
           sqlite.exec("COMMIT");
           return result;
         } catch (error) {

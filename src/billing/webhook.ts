@@ -2,7 +2,7 @@ import type Stripe from "stripe";
 import { LedgerError } from "./errors";
 import { applyClawback, applyGrant, recordPendingClawback } from "./ledger";
 import { getPack } from "./packs";
-import type { Db, Executor, TxExecutor } from "./types";
+import { SERIALIZED_LOCK, type Db, type Executor, type SerializedLock, type TxExecutor } from "./types";
 
 /**
  * Primary grant path: checkout.session.completed when payment_status is paid.
@@ -432,4 +432,28 @@ async function lockPayment(tx: TxExecutor, keys: readonly string[]): Promise<voi
     throw new LedgerError("executor_missing_lockKeys");
   }
   await tx.lockKeys(keys);
+  if ((tx.lockKeys as SerializedLock)[SERIALIZED_LOCK]) return;
+  const distinct = [...new Set(keys.filter((k) => k))];
+  if (distinct.length === 0) return;
+  // A type-correct no-op lockKeys (copied from the SQLite adapter onto Postgres) would let a refund
+  // race its grant and be parked until the next holds:reap. Check that this transaction holds the
+  // advisory lock for every key, keyed as in db.ts: pg_advisory_xact_lock(hashtext(key)).
+  let missing: number;
+  try {
+    const row = await tx.get<{ missing: unknown }>(
+      `SELECT count(*) AS missing FROM unnest(?::text[]) AS k
+       WHERE NOT EXISTS (
+         SELECT 1 FROM pg_locks l
+         WHERE l.locktype = 'advisory' AND l.pid = pg_backend_pid() AND l.granted AND l.objsubid = 1
+           AND l.classid::bigint = ((hashtext(k)::bigint >> 32) & 4294967295)
+           AND l.objid::bigint = (hashtext(k)::bigint & 4294967295))`,
+      [distinct],
+    );
+    missing = Number(row?.missing ?? 0);
+  } catch {
+    // Not Postgres (no pg_locks): a custom adapter on a database that serializes some other way.
+    // On Postgres this cannot fail, and if it did the aborted transaction would refuse the event anyway.
+    return;
+  }
+  if (missing > 0) throw new LedgerError("lock_not_held");
 }
