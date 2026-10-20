@@ -1,7 +1,8 @@
 import { config } from "dotenv";
 
+// Precedence: the process environment, then .env.local, then .env (as in Next.js).
+config({ path: ".env.local" });
 config({ path: ".env" });
-config({ path: ".env.local", override: true });
 
 async function main(): Promise<void> {
   const { createDbFromEnv } = await import("../src/billing/db");

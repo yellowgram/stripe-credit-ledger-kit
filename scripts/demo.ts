@@ -11,8 +11,9 @@
  */
 import { config } from "dotenv";
 
+// Precedence: the process environment, then .env.local, then .env (as in Next.js).
+config({ path: ".env.local", quiet: true });
 config({ path: ".env", quiet: true });
-config({ path: ".env.local", override: true, quiet: true });
 
 const FIXTURE_WEBHOOK_SECRET = `whsec_${Buffer.from("stripe-credit-ledger-kit-demo-fixture").toString("base64")}`;
 

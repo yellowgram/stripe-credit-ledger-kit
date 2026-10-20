@@ -3,8 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import Stripe from "stripe";
 
+// Precedence: the process environment, then .env.local, then .env (as in Next.js).
+config({ path: ".env.local" });
 config({ path: ".env" });
-config({ path: ".env.local", override: true });
 
 const replay = process.argv.includes("--replay");
 const secret = process.env.STRIPE_WEBHOOK_SECRET;

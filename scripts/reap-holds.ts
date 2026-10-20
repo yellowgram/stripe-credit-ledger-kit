@@ -1,7 +1,8 @@
 import { config } from "dotenv";
 
+// Precedence: the process environment, then .env.local, then .env (as in Next.js).
+config({ path: ".env.local" });
 config({ path: ".env" });
-config({ path: ".env.local", override: true });
 
 function intervalSeconds(): number {
   const raw = process.env.CREDIT_HOLD_REAP_INTERVAL_SECONDS;
