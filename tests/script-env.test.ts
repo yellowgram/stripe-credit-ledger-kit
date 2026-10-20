@@ -8,9 +8,10 @@ import { afterEach, describe, expect, it } from "vitest";
 const tsx = pathToFileURL(path.resolve("node_modules/tsx/dist/loader.mjs")).href;
 const dirs: string[] = [];
 
-function run(script: string, cwd: string, env: NodeJS.ProcessEnv): Promise<string> {
+// Next types NODE_ENV as required on ProcessEnv; the child gets exactly these variables.
+function run(script: string, cwd: string, env: Record<string, string | undefined>): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ["--import", tsx, path.resolve(script)], { cwd, env });
+    const child = spawn(process.execPath, ["--import", tsx, path.resolve(script)], { cwd, env: env as NodeJS.ProcessEnv });
     let out = "";
     child.stdout.setEncoding("utf8");
     child.stderr.setEncoding("utf8");

@@ -1,7 +1,7 @@
 # Stripe Credit Grants Are Invoice-Time — When to Use Grants, a DIY Ledger, Metronome, or Autumn
 
 **Audience:** Indie AI founders wiring prepaid credits on Stripe
-**Status:** Public chapter. It ships with the kit and stays public. Do not paywall it.
+**Status:** Ships with the kit, MIT like the rest of it.
 **Last updated:** 2026-09-27
 **Not affiliated with** Stripe, Autumn, or Metronome.
 **License:** MIT, same as the kit (`LICENSE`). Copyright (c) 2026 yellowgram.

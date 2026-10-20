@@ -28,7 +28,7 @@ export default function HomePage() {
           <li>You wanted a full AI app boilerplate. This repo is the billing module.</li>
         </ul>
         <p className="note" style={{ marginTop: 12 }}>
-          The longer version is the README section with the same name, and the free chapter in{" "}
+          The longer version is the README section with the same name, and the guide in{" "}
           <code>docs/stripe-credit-grants-are-invoice-time.md</code>.
         </p>
       </section>

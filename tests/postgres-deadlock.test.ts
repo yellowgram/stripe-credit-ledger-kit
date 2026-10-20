@@ -21,6 +21,12 @@ suite("postgres lock order", () => {
   });
 
   it("finalize and release racing six reapers never deadlock and settle each hold once", async () => {
+    // The adapter retries a deadlock victim once, which would hide a lock-order bug.
+    // Count the retries on a dedicated handle: any deadlock at all fails the test.
+    const deadlocks: unknown[] = [];
+    const outer = db;
+    db = createPostgresDb(databaseUrl as string, { onDeadlockRetry: (e) => deadlocks.push(e) });
+    try {
     const errors: string[] = [];
     for (let round = 0; round < 25; round++) {
       const users = Array.from({ length: 40 }, () => `dl_${randomUUID()}`);
@@ -59,6 +65,11 @@ suite("postgres lock order", () => {
       }
     }
     expect(errors).toEqual([]);
+    expect(deadlocks).toHaveLength(0);
+    } finally {
+      await db.close();
+      db = outer;
+    }
   }, 120_000);
 
   it("retries a transaction once when Postgres picks it as the deadlock victim", async () => {

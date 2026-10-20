@@ -21,6 +21,12 @@ export interface Executor {
   all<T>(sql: string, params?: readonly unknown[]): Promise<T[]>;
   /** Rows affected, when the driver reports them. */
   run(sql: string, params?: readonly unknown[]): Promise<number>;
+  /**
+   * Inside a transaction: serialize with any other transaction that locks one of the
+   * same keys, until commit. Postgres uses transaction-scoped advisory locks; SQLite
+   * transactions are already serialized (BEGIN IMMEDIATE), so it needs nothing.
+   */
+  lockKeys?(keys: readonly string[]): Promise<void>;
 }
 
 export interface Db extends Executor {

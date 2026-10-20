@@ -41,7 +41,7 @@ Closing as out of scope for the Stripe credit ledger kit.
 
 This project is a template: copy `src/billing` onto your Stripe account and your database. It is not a hosted wallet, not an Autumn or Metronome control plane (plans, entitlements, rollovers, dimensional pricing), and not implementation services. Live secret keys are not debugged here.
 
-If you wanted a control plane, use the README section "Use Autumn or Metronome instead when…" and the free chapter. Do not file that as a bug.
+If you wanted a control plane, use the README section "Use Autumn or Metronome instead when…" and the invoice-time guide (docs/stripe-credit-grants-are-invoice-time.md). Do not file that as a bug.
 
 In-scope bugs need the issue template: kit version or commit, Node, OS, database, a failing test name or a Stripe test-mode event id, and redacted env booleans only. No secrets. Missing repro is closed after 7 days.
 ```

@@ -28,7 +28,7 @@
     "holds:reap": "tsx scripts/reap-holds.ts"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "dependencies": {
     "better-sqlite3": "^12.4.1",

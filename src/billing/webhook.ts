@@ -221,6 +221,10 @@ export async function handleStripeEvent(
       throw error;
     }
     if (!grant.paymentIntentId) throw new LedgerError("missing_payment_intent");
+    // Serialize with a refund or dispute for the same payment arriving at the same time.
+    // Without this, the refund can miss the uncommitted grant and park a pending clawback
+    // that this transaction has already looked for, and the refund is lost.
+    await tx.lockKeys?.(paymentLockKeys({ paymentIntentId: grant.paymentIntentId, chargeId: grant.chargeId, sessionId: grant.sessionId }));
     const already = await tx.get<{ id: string }>(
       `SELECT id FROM credit_ledger_entries WHERE checkout_session_id = ?`,
       [grant.sessionId],
@@ -256,6 +260,46 @@ export async function handleStripeEvent(
     }
     return { duplicate: false, granted: true };
   });
+}
+
+/** Lock keys for one payment: every id the event carries, so grant and refund share one. */
+function paymentLockKeys(ids: { paymentIntentId: string | null; chargeId: string | null; sessionId: string | null }): string[] {
+  const keys: string[] = [];
+  if (ids.paymentIntentId) keys.push(`pi:${ids.paymentIntentId}`);
+  if (ids.chargeId) keys.push(`ch:${ids.chargeId}`);
+  if (ids.sessionId) keys.push(`cs:${ids.sessionId}`);
+  return keys;
+}
+
+/**
+ * Backstop for `npm run holds:reap`: apply pending clawbacks whose grant exists now.
+ * With the per-payment lock this should find nothing; it repairs rows left by older
+ * versions or by a grant written outside the webhook path.
+ */
+export async function applyOrphanedClawbacks(db: Db, limit = 200): Promise<{ applied: number }> {
+  const rows = await db.all<{ id: string }>(`SELECT id FROM pending_clawbacks ORDER BY created_at ASC LIMIT ?`, [limit]);
+  let applied = 0;
+  for (const { id } of rows) {
+    const did = await db.transaction(async (tx) => {
+      const row = await tx.get<{ id: string; payment_intent_id: string | null; charge_id: string | null; checkout_session_id: string | null; stripe_event_id: string; note: string | null }>(
+        `SELECT id, payment_intent_id, charge_id, checkout_session_id, stripe_event_id, note FROM pending_clawbacks WHERE id = ?`,
+        [id],
+      );
+      if (!row) return false;
+      const ids = { paymentIntentId: row.payment_intent_id, chargeId: row.charge_id, sessionId: row.checkout_session_id };
+      await tx.lockKeys?.(paymentLockKeys(ids));
+      const grant = await findGrant(tx, ids);
+      if (!grant) return false;
+      const paymentIntentId = grant.payment_intent_id ?? ids.paymentIntentId ?? (ids.chargeId ? `charge:${ids.chargeId}` : null);
+      const credits = Number(grant.delta);
+      if (!paymentIntentId || !Number.isSafeInteger(credits) || credits <= 0) return false;
+      await applyClawback(tx, { userId: grant.user_id, credits, paymentIntentId, stripeEventId: row.stripe_event_id, note: row.note ?? "pending clawback" });
+      await tx.run(`DELETE FROM pending_clawbacks WHERE id = ?`, [row.id]);
+      return true;
+    });
+    if (did) applied += 1;
+  }
+  return { applied };
 }
 
 type GrantHit = { user_id: string; delta: unknown; payment_intent_id: string | null };
@@ -316,6 +360,7 @@ async function clawbackEvent(tx: Executor, event: StripeEventInput): Promise<Web
     return { duplicate: false, granted: false, reason: "ignored_unknown_payment_intent" };
   }
   const ids = clawbackIds(object);
+  await tx.lockKeys?.(paymentLockKeys(ids));
   const grant = await findGrant(tx, ids);
   if (!grant) {
     const recorded = await recordPendingClawback(tx, {

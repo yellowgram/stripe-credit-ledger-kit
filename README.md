@@ -14,7 +14,7 @@ MIT licensed and no longer sold. Use it as a GitHub template or clone it. Releas
 
 Do not keep this ledger if a hosted product fits the job better.
 
-- **You do not need a hard gate.** Basic Stripe Billing Credits (Credit Grants) apply when the invoice finalizes. Customers can spend past the grant mid-cycle. Stripe’s own comparison says that is invoice-time, and that real-time prepaid drawdown is on Metronome. If “they owe us at the end of the month” is acceptable, use [Meters + Credit Grants](https://docs.stripe.com/billing/subscriptions/usage-based/billing-credits) and stop. Read [the free chapter](docs/stripe-credit-grants-are-invoice-time.md).
+- **You do not need a hard gate.** Basic Stripe Billing Credits (Credit Grants) apply when the invoice finalizes. Customers can spend past the grant mid-cycle. Stripe’s own comparison says that is invoice-time, and that real-time prepaid drawdown is on Metronome. If “they owe us at the end of the month” is acceptable, use [Meters + Credit Grants](https://docs.stripe.com/billing/subscriptions/usage-based/billing-credits) and stop. Read [the guide](docs/stripe-credit-grants-are-invoice-time.md).
 - **You do not want to own failure modes.** Duplicate webhooks, out-of-order events, two requests for the last credit, and a provider 500 after you already decremented are your bugs now. If you want hosted `check` / `track` and you will accept a control plane, start on [Autumn](https://useautumn.com). Free tier, then a real bill — confirm the live pricing page.
 - **You need Stripe’s real-time prepaid platform.** Dimensional pricing, commits, burndown, payment-gated credit release: [Metronome](https://docs.stripe.com/billing/how-metronome-works-with-stripe). Startup pricing is a percent of billing volume plus ingest fees — confirm [the live page](https://metronome.com/pricing). Stripe’s compare table lists **Connect: not supported** on the Metronome column.
 - **You need plans, entitlements, rollovers, or multi-feature credit systems.** That is a control plane (Autumn or Metronome), not three SQL tables.
@@ -43,7 +43,7 @@ Reservations are rows in `credit_ledger_entries` (`kind = 'reserve'`, status `he
 
 ## Quick start (five minutes, no Stripe account)
 
-Requirements: Node.js 20+. `npm install` builds `better-sqlite3`, a native module. Prebuilt binaries cover the common Linux, macOS, and Windows targets for current Node releases; where none matches, it compiles and needs Python 3, `make`, and a C++ compiler. It is a dependency even if you only use Postgres; drop it from `package.json` and `src/billing/db.ts` when you copy the module if you never use SQLite.
+Requirements: Node.js 22 or 24 (Node 20 reached end of life on 2026-03-24). `npm install` builds `better-sqlite3`, a native module. Prebuilt binaries cover the common Linux, macOS, and Windows targets for current Node releases; where none matches, it compiles and needs Python 3, `make`, and a C++ compiler. It is a dependency even if you only use Postgres; drop it from `package.json` and `src/billing/db.ts` when you copy the module if you never use SQLite.
 
 ```bash
 npm install
@@ -125,7 +125,7 @@ This posts to `NEXT_PUBLIC_APP_URL` (default `http://localhost:3000`). It does n
 - **Last-credit race** — sets the balance to 10, fires two spends of 10. One succeeds, one is insufficient, balance ends at 0.
 - **Reset demo balance to 100** — demo only. These four controls exist only when `ALLOW_DEMO_CONTROLS=true`.
 
-`npm test` runs the same edges against SQLite files. It does not call Stripe. GitHub Actions runs the same suite on Node 20 and Node 22, on SQLite and on Postgres. Failures to check first: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+`npm test` runs the same edges against SQLite files. It does not call Stripe. GitHub Actions runs the same suite on Node 22 and Node 24, on SQLite and on Postgres, and typechecks with `tsc --noEmit`. Failures to check first: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ## Environment
 
@@ -232,7 +232,7 @@ Open holds for that user are released in the **same** transaction, then the spen
 
 A new grant does **not** clear the pause. Call `unpauseUser` from your admin path. The demo reset button does that. There is no dispute state machine.
 
-A refund or dispute that arrives before the grant (or with no grant row yet) is stored as a **pending clawback** and returns HTTP 200 (`pending_clawback`) so Stripe stops. When the matching grant arrives, that pending row is applied in the **same** grant transaction. A second refund or dispute for the same payment intent is `already_clawed_back` once the clawback exists, or another `pending_clawback` while the grant is still missing. A payload with no payment intent, charge id, or Checkout session id is `ignored_unknown_payment_intent` (HTTP 200) because nothing can match a later grant.
+A refund or dispute that arrives before the grant (or with no grant row yet) is stored as a **pending clawback** and returns HTTP 200 (`pending_clawback`) so Stripe stops. When the matching grant arrives, that pending row is applied in the **same** grant transaction. On Postgres, the grant and the refund/dispute transactions for one payment take the same advisory locks (`pg_advisory_xact_lock` on each payment intent, charge and Checkout session id the event carries, in hash order), so they run one after the other: a refund that arrives while the grant is still uncommitted waits for it and claws back, instead of parking a pending clawback the grant has already looked past. SQLite transactions are already serialized. As a backstop, `npm run holds:reap` also applies any pending clawback whose grant now exists (`applyOrphanedClawbacks`) and logs `clawbacks_applied=N`; with the lock this should stay 0. A refund keyed only by a charge id the grant never recorded still cannot be matched; that is the same as before. A second refund or dispute for the same payment intent is `already_clawed_back` once the clawback exists, or another `pending_clawback` while the grant is still missing. A payload with no payment intent, charge id, or Checkout session id is `ignored_unknown_payment_intent` (HTTP 200) because nothing can match a later grant.
 
 If a dispute payload has only `charge` and no payment intent, the webhook loads the Charge and uses its payment intent. `charge.dispute.closed` does not give credits back when you win. There is no dispute state machine.
 
@@ -281,7 +281,18 @@ npm test
 | `tests/postgres-concurrency.test.ts` | Skipped unless `DATABASE_URL` is Postgres. Two-process last-credit race and webhook replay on Postgres. |
 | `tests/postgres-deadlock.test.ts` | Skipped unless `DATABASE_URL` is Postgres. `finalize` and `release` racing six reapers: no deadlock, each hold settled once. A deadlock victim is retried once. |
 
-The race test spawns two processes so the decrement is not just serialized on one connection’s mutex. `npm test` needs no Postgres and no Stripe network. The GitHub Actions `postgres` job sets `DATABASE_URL` and runs the same suite, including the Postgres race, on Node 20 and Node 22. The gate stays `UPDATE … AND balance >= ?`. It does not require `SERIALIZABLE`.
+The race test spawns two processes so the decrement is not just serialized on one connection’s mutex. `npm test` needs no Postgres and no Stripe network. The GitHub Actions `postgres` job sets `DATABASE_URL` and runs the same suite, including the Postgres races, on Node 22 and Node 24. The gate stays `UPDATE … AND balance >= ?`. It does not require `SERIALIZABLE`.
+
+## Using this template
+
+After **Use this template** (or a clone), before you ship:
+
+1. Rename the package: `name`, `repository`, `bugs` and `homepage` in `package.json` still point at yellowgram.
+2. Keep the MIT notice in `LICENSE` (add your own copyright line; do not remove the existing one).
+3. Decide on `.github/ISSUE_TEMPLATE/` and `SUPPORT.md`: they route to this repository. Delete them or point them at your own tracker.
+4. Replace the packs in `src/billing/packs.ts` with your Stripe prices.
+5. Run `npm run db:migrate` against your database and run `npm run holds:reap` as a process you own (it expires holds and backstops pending clawbacks).
+6. Wire the user id from your auth, as described below, and delete the demo shell.
 
 ## Copy the billing module
 
@@ -365,7 +376,7 @@ src/demo/ fake LLM and demo reset — not a product
 src/server/ process-wide DB handle and demo user id
 tests/ edge cases
 scripts/ migrate, signed webhook fixture, hold reaper loop
-docs/ free chapter, troubleshooting, refund glossary, checksums
+docs/ invoice-time guide, troubleshooting, refund glossary, checksums
 ```
 
 ## License
@@ -382,9 +393,9 @@ No support contract and no SLA. Best-effort GitHub Issues on `yellowgram/stripe-
 
 Details: [SUPPORT.md](SUPPORT.md). Vulnerability reports: [SECURITY.md](SECURITY.md). Customer clawback rules: [docs/REFUND_GLOSSARY.md](docs/REFUND_GLOSSARY.md).
 
-## Free chapter
+## Guide
 
-[Stripe Credit Grants Are Invoice-Time](docs/stripe-credit-grants-are-invoice-time.md) — when to use Grants, this kind of ledger, Metronome, or Autumn. It is public on purpose. Do not paywall it.
+[Stripe Credit Grants Are Invoice-Time](docs/stripe-credit-grants-are-invoice-time.md) — when to use Grants, this kind of ledger, Metronome, or Autumn.
 
 Status: [docs/STATUS.md](docs/STATUS.md).
 

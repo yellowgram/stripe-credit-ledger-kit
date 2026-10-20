@@ -1,6 +1,6 @@
 # Start here
 
-MIT licensed ([LICENSE](LICENSE)). Copyright (c) 2026 yellowgram. Use this repository as a GitHub template or clone it. Security reports: [SECURITY.md](SECURITY.md).
+MIT licensed ([LICENSE](LICENSE)). Copyright (c) 2026 yellowgram. Use this repository as a GitHub template or clone it; then follow [Using this template](README.md#using-this-template). Security reports: [SECURITY.md](SECURITY.md).
 
 Releases before 0.3.0 (tags `v0.1.2`, `v0.2.0` and their GitHub Release zips) were published under the previous license; 0.3.0 and later are MIT. Old zip digests: [docs/CHECKSUMS.md](docs/CHECKSUMS.md).
 
@@ -10,7 +10,7 @@ Releases before 0.3.0 (tags `v0.1.2`, `v0.2.0` and their GitHub Release zips) we
 
 ## Clone to a green test
 
-Node.js 20+.
+Node.js 22 or 24.
 
 ```bash
 npm install
@@ -24,7 +24,7 @@ npm run db:migrate
 npm test
 ```
 
-`npm test` is offline SQLite. It does not call Stripe and does not need the demo flag. CI runs the same suite on Node 20 and 22, SQLite and Postgres.
+`npm test` is offline SQLite. It does not call Stripe and does not need the demo flag. CI runs the same suite on Node 22 and 24, SQLite and Postgres, plus `tsc --noEmit`.
 
 After migrate, `npm run demo` is the sealed fixture smoke: a signed `pack_100` grant, then a replay of that same event. No Stripe network and no card charge. Each run is a new event id.
 
@@ -34,7 +34,7 @@ Ship on Postgres, not a shared SQLite file: `docker compose up -d`, set `DATABAS
 
 ## Walk away, or read the limits
 
-Hard gate not required, or you want hosted `check` / `track`, plans, entitlements, rollovers, or Connect: [Use Autumn or Metronome instead](README.md#use-autumn-or-metronome-instead-when) and the [free chapter](docs/stripe-credit-grants-are-invoice-time.md). Do not open an Issue to turn this kit into that product.
+Hard gate not required, or you want hosted `check` / `track`, plans, entitlements, rollovers, or Connect: [Use Autumn or Metronome instead](README.md#use-autumn-or-metronome-instead-when) and the [guide](docs/stripe-credit-grants-are-invoice-time.md). Do not open an Issue to turn this kit into that product.
 
 [Known limits](README.md#known-limits): a refund before its grant is applied when the grant arrives; a partial refund claws the whole pack; a won dispute does not return credits.
 

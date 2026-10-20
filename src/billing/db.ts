@@ -120,7 +120,19 @@ async function runPostgresTransaction<T>(pool: pg.Pool, fn: (tx: Executor) => Pr
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const result = await fn(postgresExecutor(client));
+    const tx: Executor = {
+      ...postgresExecutor(client),
+      async lockKeys(keys: readonly string[]) {
+        const distinct = [...new Set(keys.filter((k) => k))];
+        if (distinct.length === 0) return;
+        // Always in hash order, so two transactions locking overlapping sets can't deadlock.
+        await client.query(
+          `SELECT pg_advisory_xact_lock(h) FROM (SELECT DISTINCT hashtext(k) AS h FROM unnest($1::text[]) AS k ORDER BY h) AS s`,
+          [distinct],
+        );
+      },
+    };
+    const result = await fn(tx);
     await client.query("COMMIT");
     return result;
   } catch (error) {
@@ -135,7 +147,16 @@ async function runPostgresTransaction<T>(pool: pg.Pool, fn: (tx: Executor) => Pr
   }
 }
 
-export function createPostgresDb(connectionString: string): Db {
+export type PostgresDbOptions = {
+  /**
+   * Called each time Postgres picks one of this Db's transactions as a deadlock
+   * victim (40P01) and the adapter retries it. The ledger's own lock order should
+   * never trigger it; log it in production, and tests assert it never fires.
+   */
+  onDeadlockRetry?: (error: unknown) => void;
+};
+
+export function createPostgresDb(connectionString: string, options: PostgresDbOptions = {}): Db {
   const pool = new Pool({ connectionString, max: 10 });
   const autocommit = postgresExecutor(pool);
 
@@ -153,6 +174,7 @@ export function createPostgresDb(connectionString: string): Db {
           return await runPostgresTransaction(pool, fn);
         } catch (error) {
           if (attempt >= 2 || (error as { code?: unknown })?.code !== "40P01") throw error;
+          options.onDeadlockRetry?.(error);
         }
       }
     },

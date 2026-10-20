@@ -1,8 +1,8 @@
 import { config } from "dotenv";
 
 // Precedence: the process environment, then .env.local, then .env (as in Next.js).
-config({ path: ".env.local" });
-config({ path: ".env" });
+config({ path: ".env.local", quiet: true });
+config({ path: ".env", quiet: true });
 
 function intervalSeconds(): number {
   const raw = process.env.CREDIT_HOLD_REAP_INTERVAL_SECONDS;
@@ -18,6 +18,7 @@ async function main(): Promise<void> {
   const { createDbFromEnv } = await import("../src/billing/db");
   const { reapExpiredHolds } = await import("../src/billing/ledger");
   const { ensureSchema } = await import("../src/billing/schema");
+  const { applyOrphanedClawbacks } = await import("../src/billing/webhook");
 
   const db = createDbFromEnv();
   await ensureSchema(db);
@@ -26,7 +27,8 @@ async function main(): Promise<void> {
 
   do {
     const result = await reapExpiredHolds(db);
-    console.log(`${new Date().toISOString()} expired=${result.expired}`);
+    const claws = await applyOrphanedClawbacks(db);
+    console.log(`${new Date().toISOString()} expired=${result.expired} clawbacks_applied=${claws.applied}`);
     if (once) break;
     await new Promise((resolve) => setTimeout(resolve, waitSeconds * 1000));
   } while (true);
