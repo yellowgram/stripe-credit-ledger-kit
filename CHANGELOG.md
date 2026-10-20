@@ -2,6 +2,15 @@
 
 Versions here match `package.json`. Entries before 0.3.0 describe releases published under the previous license and are kept as history.
 
+## 0.4.0 — 2026-10-19
+
+- **Reaper deadlock fixed (Postgres).** The reaper locked a batch of holds and then each user's balance row; `reserve`, `finalize`, and `release` lock the balance row first. A reaper racing `finalize` could deadlock and fail one side with 40P01. Each hold is now expired in its own transaction, balance row first, on both engines. Several reapers can run at once; each hold is still expired once.
+- **Deadlock retry.** The Postgres adapter retries a transaction once when Postgres reports 40P01. `Db.transaction` callbacks may therefore run twice and should only touch the database.
+- **Reserve no longer scans on every call.** `reserve` reaps at most once every 30 seconds per database handle (`OPPORTUNISTIC_REAP_INTERVAL_MS`, exported), and a failure in that pass no longer fails the reservation. Production still runs `npm run holds:reap`.
+- **Scripts no longer override your environment.** `db:migrate`, `demo`, `demo:webhook`, and `holds:reap` loaded `.env.local` with override, so a stray `.env.local` beat an explicit `DATABASE_URL` or `SQLITE_PATH` (a production reaper or migrate could hit the dev database). The process environment now wins, then `.env.local`, then `.env`.
+- Tests: `tests/postgres-deadlock.test.ts`, `tests/reaper-throttle.test.ts`, `tests/script-env.test.ts`. `tests/phase-b.test.ts` is now `tests/clawback-and-migrate.test.ts`.
+- Docs: five-minute offline quickstart (the old `cp` line was missing its spaces), a threat model, hold-TTL and `better-sqlite3` notes, the removed `v0.1.0` / `v0.1.1` tags, and leftover sales wording removed. A dead link to `BUYER_START_HERE.md` now points at `START_HERE.md`.
+
 ## 0.3.0 — 2026-10-19
 
 - Relicensed to MIT; no longer sold. `LICENSE` is the MIT License (Copyright (c) 2026 yellowgram). The commercial grant and Polar listing packet were removed (they remain in git history). Price, money-back, and support-window copy is gone from README, START_HERE (was `BUYER_START_HERE.md`), SUPPORT, SECURITY, docs, and issue templates.
@@ -11,9 +20,9 @@ Versions here match `package.json`. Entries before 0.3.0 describe releases publi
 
 ## 0.2.0 — 2026-09-27
 
-Phase B on branch `clk-0.2.0`. `package.json` is **0.2.0**. Phase A decisions that constrain this cut: pending clawback is persist-and-HTTP-200 (`pending-clawback-http: persist-pending-and-200`); pause only when spendable cannot cover the pack after hold release (`pause-on-open-holds: pause-only-on-shortfall`); a won dispute does not restore credits (`won-dispute: no-restore`); price or currency changes require a new packId, with no pack snapshot store (`pack-identity: new-packId-required-plus-comments`, `immutable-packs: smallest-fix-only`); the reaper is skip-locked / conditional claim and production must run `npm run holds:reap` (`production-reaper: skip-locked-plus-readme-must-run`); `finalize` stays an audit of the reservation (`finalize-amount: bill-the-reservation`). Copy-contract is a CR checklist, not a product change. Soft-WTP stays off. No Polar checkout URLs. License fence unchanged. The prior sold `v0.1.2` zip is not resealed.
+Policy decisions in this release: a refund or dispute before its grant is stored and answered with HTTP 200; the user is paused only on a real shortfall; a won dispute does not restore credits; a price or currency change needs a new packId; production must run `npm run holds:reap`; `finalize` bills the reservation.
 
-- **Polar file.** `stripe-credit-ledger-kit-0.2.0.zip`, tag `v0.2.0`, commit `ed435e2`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`. Polar delivers this file. The prior sold zip `stripe-credit-ledger-kit-0.1.2.zip` is withdrawn from the shelf and is not resealed. Anyone who already bought it keeps the rights for that zip. Soft-WTP stays off.
+- **Release zip.** `stripe-credit-ledger-kit-0.2.0.zip`, tag `v0.2.0`, commit `ed435e2`, SHA-256 `2e6d6088f93a79c7b141982cb0c06e26eeb6ad28af5cc4135532a30677b734c5`.
 - **Pending clawback.** `charge.refunded` and `charge.dispute.created` with no grant row persist a `pending_clawbacks` row and return HTTP 200 (`pending_clawback`) so Stripe stops. The matching grant applies that clawback in the same grant transaction. A payload with no payment intent, charge id, or Checkout session id stays `ignored_unknown_payment_intent`.
 - **Pause only on shortfall.** Open holds are still released before the debit. The user is paused only when spendable cannot cover the pack. Releasing a hold does not pause when the balance covers the pack. Grants do not unpause.
 - **Won dispute.** `charge.dispute.closed` stays `ignored_event`. Credits are not restored.
@@ -22,16 +31,16 @@ Phase B on branch `clk-0.2.0`. `package.json` is **0.2.0**. Phase A decisions th
 - **Pack identity.** README and `src/billing/packs.ts` say a price or currency change requires a new packId. Catalog plus `amount_total` and currency remain the grant authority. Mismatch still rolls back. No snapshot store.
 - **Reaper.** Postgres claims holds with `FOR UPDATE SKIP LOCKED`. SQLite claims with `UPDATE ... WHERE status = 'held'`. README requires `npm run holds:reap` in production. Hold TTL defaults are unchanged. `track` does not reap. `reserve` may still reap opportunistically. That is not the production path. No scheduler.
 - **Finalize.** Still bills the reservation. No lesser actual-use amount.
-- Buyer-copy notes that were on main after tag `v0.1.2` stay: support is GitHub Issues for 60 days, `npm run demo` is a sealed local fixture. The Polar file name is the 0.2.0 zip above. Soft-WTP stays off.
+- `npm run demo` is a sealed local fixture.
 
 ## 0.1.2 — 2026-09-27
 
-License fence for the sold zip. Ledger behavior is unchanged from 0.1.0 and 0.1.1. No env renames. No webhook status changes. No reserve-replay changes. No clawback-policy changes. No pack-schema changes. No demo-flag behavior changes.
+License change only. Ledger behavior is unchanged from 0.1.0 and 0.1.1. No env renames. No webhook status changes. No reserve-replay changes. No clawback-policy changes. No pack-schema changes. No demo-flag behavior changes.
 
-- Sold file: `stripe-credit-ledger-kit-0.1.2.zip`, tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`. This zip is the license fence in this section. Price $79 once. No money-back window.
-- Whole kit is source-available under PolyForm Noncommercial 1.0.0 (`LICENSE`) plus a Credit Ledger commercial grant (`docs/COMMERCIAL_GRANT.md`). Claims: source-available = true. OSI open source = false. Copyright holder remains yellowgram (`Copyright (c) 2026 yellowgram`). Legal seller: Suthirth Solutions, operating as yellowgram. Contact: hello@yellowgram.dev. Product name: Credit Ledger (Stripe credit ledger kit). Current SKU: $79 once.
+- Release zip: `stripe-credit-ledger-kit-0.1.2.zip`, tag `v0.1.2`, commit `593a2d1`, SHA-256 `b63b1c834646030c0e201db9a0b2240cb1b8ac547fb1fb610794431491955832`.
+- Whole kit is source-available under PolyForm Noncommercial 1.0.0 (`LICENSE`) plus a Credit Ledger commercial grant (`docs/COMMERCIAL_GRANT.md`). Claims: source-available = true. OSI open source = false. Copyright holder remains yellowgram (`Copyright (c) 2026 yellowgram`). Contact: hello@yellowgram.dev.
 - MIT extract dropped going forward. `src/billing/LICENSE.MIT` is deleted. MIT headers are removed from `src/billing/ledger.ts`, `types.ts`, and `errors.ts`. The free chapter is not MIT. `package.json` `"license"` is `LicenseRef-PolyForm-Noncommercial-1.0.0`.
-- Soft-WTP stays off. The free chapter no longer contains a “would you pay ~$79” ask or `[WAITLIST_URL]`. No coupons. No cold invoices. No Polar checkout URLs in the README or zip-bound docs.
+- The free chapter no longer contains a pricing question or a waitlist link.
 - Prior tags are grandfathered and **not resealed**. Rights already granted for those sealed artifacts are not clawed back.
   - `v0.1.0` — `stripe-credit-ledger-kit-0.1.0.zip` — SHA-256 `aa558100add2a3585190656ab1eb4b217cda6fafe596eaafe0dd02f9a9a33d94`. Shipped with an MIT carve-out on `src/billing/ledger.ts`, `types.ts`, `errors.ts`, and the free chapter for that file alone.
   - `v0.1.1` — `stripe-credit-ledger-kit-0.1.1.zip` — SHA-256 `a9bc28d82f673afc0eafbd1c3ad20c3047e95c7eb71ad70dd96f4b88473d41a8` (commit `c633584`). Same MIT carve-out as `v0.1.0`.
@@ -40,7 +49,7 @@ License fence for the sold zip. Ledger behavior is unchanged from 0.1.0 and 0.1.
 
 Hygiene only. Ledger behavior is the 0.1.0 baseline below. No env renames. No webhook status changes. No reserve-replay changes. No clawback-policy changes. No pack-schema changes. No demo-flag behavior changes.
 
-- `BUYER_START_HERE.md` is the zip front door: offline `npm test`, demo flag, graduation off `DEMO_USER_ID` / `x-ledger-secret`, hold reaper and `unpauseUser` owned by the buyer, support boundary.
+- `BUYER_START_HERE.md` (now `START_HERE.md`) is the front door: offline `npm test`, demo flag, graduation off `DEMO_USER_ID` / `x-ledger-secret`, hold reaper and `unpauseUser` owned by you, support boundary.
 - `x-ledger-secret` still bills `DEMO_USER_ID`. That warning is on the front door and beside Environment / Known limits.
 - `docs/TROUBLESHOOTING.md`, `docs/REFUND_GLOSSARY.md`, `SUPPORT.md` (including the out-of-scope reply), `SECURITY.md`, `docs/CHECKSUMS.md`.
 - Issue form requires a repro pack. Missing repro is closed after 7 days.
@@ -50,7 +59,7 @@ Hygiene only. Ledger behavior is the 0.1.0 baseline below. No env renames. No we
 
 ## 0.1.0 — 2026-09-26
 
-First Polar-ready cut. Behavior below is the contract 0.1.1 still implements.
+First release. Behavior below is the contract 0.1.1 still implements.
 
 - **Demo flag.** `ALLOW_DEMO_CONTROLS` defaults false. `NODE_ENV=production` forces the shell closed (seed, spend, race, reset, and the flag).
 - **Secret.** `LEDGER_API_SECRET` / `x-ledger-secret` opens demo checkout, check, and track only. Those routes still bill `DEMO_USER_ID`. Not multi-tenant auth.
@@ -58,6 +67,6 @@ First Polar-ready cut. Behavior below is the contract 0.1.1 still implements.
 - **Grant authority.** Pack catalog plus `amount_total` and `currency`. `metadata.credits` is not authority.
 - **Checkout origin.** `success_url` and `cancel_url` use `NEXT_PUBLIC_APP_URL` only.
 - **Reserve replay.** Same user, idempotency key, and amount. No payload hash. A finished key does not spend again.
-- **Clawback.** `charge.refunded` and `charge.dispute.created` take the full pack, including a partial refund. A won dispute (`charge.dispute.closed`) does not return credits. Shortfall can pause the user. Grants do not unpause. Buyer calls `unpauseUser`.
+- **Clawback.** `charge.refunded` and `charge.dispute.created` take the full pack, including a partial refund. A won dispute (`charge.dispute.closed`) does not return credits. Shortfall can pause the user. Grants do not unpause. You call `unpauseUser`.
 - **Holds.** Default TTL 900 seconds. Production must run `npm run holds:reap`. The demo server reaps once on the first database request. `reserve` reaps before each reservation. `track` does not. One pass expires at most 200 holds.
 - **Zip.** Release asset `stripe-credit-ledger-kit-0.1.0.zip` omits `node_modules`, secret env files, SQLite databases, and `.git`. It includes `.env.example`.
