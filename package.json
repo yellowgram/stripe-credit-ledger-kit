@@ -25,7 +25,9 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "demo": "tsx scripts/demo.ts",
     "demo:webhook": "tsx scripts/post-signed-event.ts",
-    "holds:reap": "tsx scripts/reap-holds.ts"
+    "holds:reap": "tsx scripts/reap-holds.ts",
+    "prepack": "node -e \"console.error('stripe-credit-ledger-kit is a GitHub template, not an npm package: use \\\"Use this template\\\" on GitHub.');process.exit(1)\"",
+    "template:smoke": "bash scripts/template-smoke.sh"
   },
   "engines": {
     "node": ">=22"

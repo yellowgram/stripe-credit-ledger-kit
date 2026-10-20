@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
 import pg from "pg";
-import type { Db, Executor } from "./types";
+import type { Db, Executor, TxExecutor } from "./types";
 
 const { Pool, types } = pg;
 
@@ -72,7 +72,7 @@ export function createSqliteDb(filename: string): Db {
     get: (sql, params) => mutex.run(() => executor.get(sql, params)),
     all: (sql, params) => mutex.run(() => executor.all(sql, params)),
     run: (sql, params) => mutex.run(() => executor.run(sql, params)),
-    async transaction<T>(fn: (tx: Executor) => Promise<T>): Promise<T> {
+    async transaction<T>(fn: (tx: TxExecutor) => Promise<T>): Promise<T> {
       return mutex.run(async () => {
         if (inTransaction) {
           throw new Error("nested_transaction");
@@ -80,7 +80,7 @@ export function createSqliteDb(filename: string): Db {
         inTransaction = true;
         sqlite.exec("BEGIN IMMEDIATE");
         try {
-          const result = await fn(executor);
+          const result = await fn({ ...executor, lockKeys: async () => {} });
           sqlite.exec("COMMIT");
           return result;
         } catch (error) {
@@ -116,11 +116,11 @@ function postgresExecutor(queryable: {
   };
 }
 
-async function runPostgresTransaction<T>(pool: pg.Pool, fn: (tx: Executor) => Promise<T>): Promise<T> {
+async function runPostgresTransaction<T>(pool: pg.Pool, fn: (tx: TxExecutor) => Promise<T>): Promise<T> {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const tx: Executor = {
+    const tx: TxExecutor = {
       ...postgresExecutor(client),
       async lockKeys(keys: readonly string[]) {
         const distinct = [...new Set(keys.filter((k) => k))];
@@ -164,7 +164,7 @@ export function createPostgresDb(connectionString: string, options: PostgresDbOp
     get: autocommit.get,
     all: autocommit.all,
     run: autocommit.run,
-    async transaction<T>(fn: (tx: Executor) => Promise<T>): Promise<T> {
+    async transaction<T>(fn: (tx: TxExecutor) => Promise<T>): Promise<T> {
       // Postgres aborts one side of a deadlock with 40P01. The ledger takes
       // locks in one order (balance row, then entries), so this should not
       // happen; if a caller's own transaction mixes users, retry it once on a

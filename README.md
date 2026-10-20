@@ -293,12 +293,13 @@ After **Use this template** (or a clone), before you ship:
 4. Replace the packs in `src/billing/packs.ts` with your Stripe prices.
 5. Run `npm run db:migrate` against your database and run `npm run holds:reap` as a process you own (it expires holds and backstops pending clawbacks).
 6. Wire the user id from your auth, as described below, and delete the demo shell.
+7. `npm run template:smoke` copies only the committed files into an empty directory and installs, typechecks, migrates, runs the demo and builds them; CI runs it as `template-from-clean-clone`. `npm pack` refuses on purpose: this is a template, not an npm package. Remove the `prepack` script if you turn your copy into a package.
 
 ## Copy the billing module
 
 `src/billing` does not import Next.js. Copy the folder. Wire your own user id (from your auth, not from the client body). Keep `ensureSchema` on boot or run `npm run db:migrate` (`migrate` in `src/billing/schema.ts`).
 
-You can implement `Db` yourself and still use `ledger.ts`, `types.ts`, and `errors.ts`. The whole tree, including adapters in `src/billing/db.ts`, Checkout, webhook, and catalog, is MIT. See `LICENSE`.
+You can implement `Db` yourself and still use `ledger.ts`, `types.ts`, and `errors.ts`. Its `transaction` must hand the callback a `TxExecutor`, whose `lockKeys` is required: on Postgres implement it with `pg_advisory_xact_lock` as `src/billing/db.ts` does (on SQLite it can do nothing). Without it a refund that races its grant would be lost, so the webhook handlers refuse such an executor with `executor_missing_lockKeys`. The whole tree, including adapters in `src/billing/db.ts`, Checkout, webhook, and catalog, is MIT. See `LICENSE`.
 
 Delete the demo shell when it is no longer useful:
 

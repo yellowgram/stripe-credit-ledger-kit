@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createPostgresDb, isPostgresUrl } from "../src/billing/db";
 import { balanceBreakdown, finalize, getBalance, grantCredits, reapExpiredHolds, release, reserve } from "../src/billing/ledger";
 import { ensureSchema } from "../src/billing/schema";
-import type { Db, Executor } from "../src/billing/types";
+import type { Db, TxExecutor } from "../src/billing/types";
 import { applyOrphanedClawbacks, handleStripeEvent } from "../src/billing/webhook";
 import { checkoutEvent } from "./helpers";
 
@@ -28,8 +28,8 @@ function pausingDb(db: Db, pauseOn: RegExp) {
     ...db,
     transaction: (fn) =>
       db.transaction(async (tx) => {
-        const w: Executor = {
-          lockKeys: tx.lockKeys?.bind(tx),
+        const w: TxExecutor = {
+          lockKeys: tx.lockKeys.bind(tx),
           run: tx.run.bind(tx),
           get: async (sql, p) => {
             const row = await tx.get(sql, p);

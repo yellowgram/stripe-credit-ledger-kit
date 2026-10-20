@@ -2,7 +2,7 @@ import type Stripe from "stripe";
 import { LedgerError } from "./errors";
 import { applyClawback, applyGrant, recordPendingClawback } from "./ledger";
 import { getPack } from "./packs";
-import type { Db, Executor } from "./types";
+import type { Db, Executor, TxExecutor } from "./types";
 
 /**
  * Primary grant path: checkout.session.completed when payment_status is paid.
@@ -224,7 +224,7 @@ export async function handleStripeEvent(
     // Serialize with a refund or dispute for the same payment arriving at the same time.
     // Without this, the refund can miss the uncommitted grant and park a pending clawback
     // that this transaction has already looked for, and the refund is lost.
-    await tx.lockKeys?.(paymentLockKeys({ paymentIntentId: grant.paymentIntentId, chargeId: grant.chargeId, sessionId: grant.sessionId }));
+    await lockPayment(tx, paymentLockKeys({ paymentIntentId: grant.paymentIntentId, chargeId: grant.chargeId, sessionId: grant.sessionId }));
     const already = await tx.get<{ id: string }>(
       `SELECT id FROM credit_ledger_entries WHERE checkout_session_id = ?`,
       [grant.sessionId],
@@ -287,7 +287,7 @@ export async function applyOrphanedClawbacks(db: Db, limit = 200): Promise<{ app
       );
       if (!row) return false;
       const ids = { paymentIntentId: row.payment_intent_id, chargeId: row.charge_id, sessionId: row.checkout_session_id };
-      await tx.lockKeys?.(paymentLockKeys(ids));
+      await lockPayment(tx, paymentLockKeys(ids));
       const grant = await findGrant(tx, ids);
       if (!grant) return false;
       const paymentIntentId = grant.payment_intent_id ?? ids.paymentIntentId ?? (ids.chargeId ? `charge:${ids.chargeId}` : null);
@@ -354,13 +354,13 @@ function clawbackIds(object: NonNullable<StripeEventInput["data"]["object"]>): {
   return { paymentIntentId, chargeId, sessionId };
 }
 
-async function clawbackEvent(tx: Executor, event: StripeEventInput): Promise<WebhookResult> {
+async function clawbackEvent(tx: TxExecutor, event: StripeEventInput): Promise<WebhookResult> {
   const object = event.data.object;
   if (!object) {
     return { duplicate: false, granted: false, reason: "ignored_unknown_payment_intent" };
   }
   const ids = clawbackIds(object);
-  await tx.lockKeys?.(paymentLockKeys(ids));
+  await lockPayment(tx, paymentLockKeys(ids));
   const grant = await findGrant(tx, ids);
   if (!grant) {
     const recorded = await recordPendingClawback(tx, {
@@ -404,4 +404,16 @@ async function clawbackEvent(tx: Executor, event: StripeEventInput): Promise<Web
     shortfall: applied.shortfall,
     paused: applied.paused,
   };
+}
+
+/**
+ * Lock one payment's ids for the rest of the transaction. Refuses an executor without
+ * lockKeys (a hand-written or JavaScript adapter), because without the lock a refund
+ * that races its grant on Postgres is silently lost.
+ */
+async function lockPayment(tx: TxExecutor, keys: readonly string[]): Promise<void> {
+  if (typeof (tx as Partial<TxExecutor>).lockKeys !== "function") {
+    throw new LedgerError("executor_missing_lockKeys");
+  }
+  await tx.lockKeys(keys);
 }

@@ -21,12 +21,18 @@ export interface Executor {
   all<T>(sql: string, params?: readonly unknown[]): Promise<T[]>;
   /** Rows affected, when the driver reports them. */
   run(sql: string, params?: readonly unknown[]): Promise<number>;
-  /**
-   * Inside a transaction: serialize with any other transaction that locks one of the
-   * same keys, until commit. Postgres uses transaction-scoped advisory locks; SQLite
-   * transactions are already serialized (BEGIN IMMEDIATE), so it needs nothing.
-   */
-  lockKeys?(keys: readonly string[]): Promise<void>;
+}
+
+/**
+ * The executor a transaction hands to its callback. `lockKeys` is required: the
+ * webhook handlers lock each payment's ids before reading the grant, so a grant and
+ * a refund for one payment can't interleave and lose the refund. Postgres implements
+ * it with transaction-scoped advisory locks (see db.ts); SQLite transactions are
+ * already serialized (BEGIN IMMEDIATE), so its lockKeys does nothing. A custom
+ * adapter without it fails to typecheck, and the handlers refuse it at run time.
+ */
+export interface TxExecutor extends Executor {
+  lockKeys(keys: readonly string[]): Promise<void>;
 }
 
 export interface Db extends Executor {
@@ -37,7 +43,7 @@ export interface Db extends Executor {
    * on a fresh transaction if Postgres reports a deadlock (40P01), so `fn` should
    * only touch the database.
    */
-  transaction<T>(fn: (tx: Executor) => Promise<T>): Promise<T>;
+  transaction<T>(fn: (tx: TxExecutor) => Promise<T>): Promise<T>;
   close(): Promise<void>;
 }
 
